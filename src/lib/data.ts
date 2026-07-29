@@ -235,7 +235,7 @@ export async function getRoster(): Promise<PlayerMeta[]> {
       if (data && data.length) {
         return data.map((r) => ({
           id:String(r.id),
-          name: String(r.name),
+          name: String(r.player_name),
           number: Number(r.number),
           primaryPosition: String(r.primary_position),
           ageGroup: String(r.age_group ?? "U12"),
@@ -328,7 +328,7 @@ export async function saveAssessment(
       await supabase!
         .from("players")
         .insert({
-          name: newPlayer.name,
+          player_name: newPlayer.name,
           number: newPlayer.number,
           primary_position: newPlayer.primaryPosition,
           age_group: newPlayer.ageGroup,
