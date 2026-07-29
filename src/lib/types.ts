@@ -85,6 +85,7 @@ export const SCALE_LABELS: Record<number, string> = {
 /** One assessment row — 1:1 with a form submission / sheet row. */
 export interface Assessment {
   timestamp: string; // ISO — auto from the form
+  playerId?: string;
   playerName: string;
   date: string; // ISO date of the session
   sessionType: SessionType;
@@ -99,6 +100,7 @@ export interface Assessment {
 
 /** Static roster metadata (jersey number, primary position). */
 export interface PlayerMeta {
+  id?: string;
   name: string;
   number: number;
   primaryPosition: string;

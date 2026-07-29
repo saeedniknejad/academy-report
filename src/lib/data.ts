@@ -50,7 +50,14 @@ const SKILL_COLUMN: Record<SkillKey, string> = {
 
 /** Build an insert payload for the `assessments` table from an Assessment. */
 function assessmentToDbRow(a: Assessment): Record<string, unknown> {
+  if (!a.playerId) {
+    throw new Error (
+        `Missing player ID for ${a.playerName}`
+    );
+  }
+
   const row: Record<string, unknown> = {
+    player_id: a.playerId,
     player_name: a.playerName,
     date: a.date,
     session_type: a.sessionType,
@@ -73,6 +80,7 @@ function dbRowToAssessment(row: Record<string, unknown>): Assessment {
   });
   return {
     timestamp: String(row.created_at ?? `${row.date}T00:00:00.000Z`),
+    playerId:row.player_id ? String(row.player_id): undefined,
     playerName: String(row.player_name),
     date: String(row.date),
     sessionType: (String(row.session_type) || "Training") as SessionType,
@@ -226,6 +234,7 @@ export async function getRoster(): Promise<PlayerMeta[]> {
       if (error) throw error;
       if (data && data.length) {
         return data.map((r) => ({
+          id:String(r.id),
           name: String(r.name),
           number: Number(r.number),
           primaryPosition: String(r.primary_position),
@@ -315,13 +324,26 @@ export async function saveAssessment(
   if (!isSupabaseConfigured()) return; // demo mode: state-only, handled in App
 
   if (newPlayer) {
-    const { error: pErr } = await supabase!.from("players").insert({
-      name: newPlayer.name,
-      number: newPlayer.number,
-      primary_position: newPlayer.primaryPosition,
-      age_group: newPlayer.ageGroup,
-    });
+    const { data: createdPlayer, error: pErr } =
+      await supabase!
+        .from("players")
+        .insert({
+          name: newPlayer.name,
+          number: newPlayer.number,
+          primary_position: newPlayer.primaryPosition,
+          age_group: newPlayer.ageGroup,
+        })
+        .select("id")
+        .single();
+
     if (pErr) throw pErr;
+
+    if (!createdPlayer?.id) {
+      throw new Error(
+        "The new player was created without a player ID."
+      );
+    }
+    assessment.playerId = String(createdPlayer.id);
 
     const { error: aErr } = await supabase!.from("attendance").insert({
       player_name: newPlayer.name,

@@ -40,7 +40,7 @@ function todayISO(): string {
  * Submitting feeds the charts live — no second app or page.
  */
 export default function AssessmentForm({ roster, onSubmit, onClose }: AssessmentFormProps) {
-  const [playerSelect, setPlayerSelect] = useState(roster[0]?.name ?? ADD_NEW);
+  const [playerSelect, setPlayerSelect] = useState(roster[0]?.id ?? ADD_NEW);
   const [newName, setNewName] = useState("");
   const [newNumber, setNewNumber] = useState("");
   const [newPosition, setNewPosition] = useState<Position>("Midfielder");
@@ -74,6 +74,7 @@ export default function AssessmentForm({ roster, onSubmit, onClose }: Assessment
     setError(null);
 
     // Resolve the player (existing selection or a new roster entry).
+    let playerId: string | undefined;
     let playerName: string;
     let newPlayer: PlayerMeta | undefined;
 
@@ -94,13 +95,23 @@ export default function AssessmentForm({ roster, onSubmit, onClose }: Assessment
         ageGroup: roster[0]?.ageGroup ?? "U12",
       };
     } else {
-      playerName = playerSelect;
+       const selectedPlayer = roster.find(
+        (player) => player.id === playerSelect
+       );
+
+       if (!selectedPlayer) {
+         return setError("The selected player could not be found.");
+       }
+
+       playerId = selectedPlayer.id;
+       playerName = selectedPlayer.name;
     }
 
     if (!date) return setError("Pick the session date.");
 
     const assessment: Assessment = {
       timestamp: new Date().toISOString(),
+      playerId,
       playerName,
       date,
       sessionType,
@@ -116,8 +127,12 @@ export default function AssessmentForm({ roster, onSubmit, onClose }: Assessment
     try {
       await onSubmit(assessment, newPlayer);
       // On success the parent closes the modal; nothing more to do here.
-    } catch {
-      setError("Couldn't save to the database. Check your connection and try again.");
+    } catch (err) {
+      console.error("Assessment save failed:", err);
+      setError(
+          err instanceof Error
+            ? err.message
+              : "The assessment could not be saved.");
       setSubmitting(false);
     }
   }
@@ -163,7 +178,7 @@ export default function AssessmentForm({ roster, onSubmit, onClose }: Assessment
                 className={inputClass}
               >
                 {roster.map((m) => (
-                  <option key={m.number} value={m.name}>
+                  <option key={m.id ?? m.number} value={m.id ?? m.name}>
                     #{m.number} · {m.name} ({m.primaryPosition})
                   </option>
                 ))}
