@@ -346,6 +346,7 @@ export async function saveAssessment(
     assessment.playerId = String(createdPlayer.id);
 
     const { error: aErr } = await supabase!.from("attendance").insert({
+      id: createdPlayer.id,
       player_name: newPlayer.name,
       attended: 1,
       total: DEFAULT_ATTENDANCE_TOTAL,
@@ -353,8 +354,8 @@ export async function saveAssessment(
     if (aErr) throw aErr;
   }
 
-  const { error } = await supabase!.from("assessments").insert(assessmentToDbRow(assessment));
-  if (error) throw error;
+  const { error: assessmentError } = await supabase!.from("assessments").insert(assessmentToDbRow(assessment));
+  if (assessmentError) throw assessmentError;
 
   if (!newPlayer) {
     // Increment attendance for the existing player (best-effort).
