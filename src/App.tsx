@@ -1,0 +1,220 @@
+import { useEffect, useMemo, useState } from "react";
+import { Shield, Loader2, Plus, LogOut } from "lucide-react";
+import CoachView from "./components/CoachView";
+import AssessmentForm from "./components/AssessmentForm";
+import Login from "./components/Login";
+import { authRequired, supabase } from "./lib/supabase";
+import {
+  getAssessments,
+  getAttendance,
+  getGoals,
+  getRoster,
+  isLiveDataConfigured,
+  saveAssessment,
+  toggleGoalStatus,
+} from "./lib/data";
+import { buildAllProfiles } from "./lib/derive";
+import type {
+  Assessment,
+  AttendanceRecord,
+  ExpandedNote,
+  Goal,
+  PlayerMeta,
+  PlayerProfile,
+} from "./lib/types";
+import { DEFAULT_ATTENDANCE_TOTAL } from "./lib/data";
+
+export default function App() {
+  const [loading, setLoading] = useState(true);
+
+  const [roster, setRoster] = useState<PlayerMeta[]>([]);
+  const [assessments, setAssessments] = useState<Assessment[]>([]);
+  const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
+  const [goals, setGoals] = useState<Goal[]>([]);
+
+  const [publishedNotes, setPublishedNotes] = useState<Record<string, ExpandedNote>>({});
+  const [activeMonth, setActiveMonth] = useState("Current");
+  const [formOpen, setFormOpen] = useState(false);
+
+  // ---- Auth (only enforced when VITE_REQUIRE_AUTH=true + Supabase set) ----
+  const [authed, setAuthed] = useState(!authRequired());
+  const [authChecked, setAuthChecked] = useState(!authRequired());
+
+  useEffect(() => {
+    if (!authRequired()) return;
+    let sub: { unsubscribe: () => void } | undefined;
+    supabase!.auth.getSession().then(({ data }) => {
+      setAuthed(Boolean(data.session));
+      setAuthChecked(true);
+    });
+    const { data } = supabase!.auth.onAuthStateChange((_event, session) => {
+      setAuthed(Boolean(session));
+    });
+    sub = data.subscription;
+    return () => sub?.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      const [r, a, att, g] = await Promise.all([
+        getRoster(),
+        getAssessments({ audience: "coach" }),
+        getAttendance(),
+        getGoals(),
+      ]);
+      if (cancelled) return;
+      setRoster(r);
+      setAssessments(a);
+      setAttendance(att);
+      setGoals(g);
+      setLoading(false);
+    }
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const profiles: PlayerProfile[] = useMemo(
+    () => (roster.length ? buildAllProfiles(roster, assessments) : []),
+    [roster, assessments]
+  );
+
+  const months = useMemo(() => {
+    const set = new Set<string>();
+    profiles.forEach((p) => p.monthlyProgress.forEach((m) => set.add(m.month)));
+    return ["Current", ...[...set]];
+  }, [profiles]);
+
+  function publishNote(playerName: string, note: ExpandedNote) {
+    setPublishedNotes((prev) => ({ ...prev, [playerName]: note }));
+  }
+
+  function toggleGoal(id: string) {
+    let nextStatus: "achieved" | "in-progress" = "achieved";
+    setGoals((prev) =>
+      prev.map((g) => {
+        if (g.id !== id) return g;
+        nextStatus = g.status === "achieved" ? "in-progress" : "achieved";
+        return { ...g, status: nextStatus };
+      })
+    );
+    // Persist when Supabase is configured (no-op in demo mode).
+    toggleGoalStatus(id, nextStatus).catch((err) =>
+      console.error("Failed to persist goal status:", err)
+    );
+  }
+
+  /**
+   * Add a coach-entered assessment. Prepending the row means the derived
+   * profiles (radars, trends, flags, timeline) recompute automatically. A
+   * brand-new player is registered in the roster and seeded with an attendance
+   * record so their panels render.
+   */
+  async function addAssessment(assessment: Assessment, newPlayer?: PlayerMeta) {
+    // Persist first when Supabase is configured, so we don't show data that
+    // failed to save. In demo mode saveAssessment is a no-op and resolves.
+    try {
+      await saveAssessment(assessment, newPlayer);
+    } catch (err) {
+      console.error("Failed to save assessment:", err);
+      throw err; // surfaced by the form so the coach can retry
+    }
+
+    if (newPlayer) {
+      setRoster((prev) => [...prev, newPlayer]);
+      setAttendance((prev) => [
+        ...prev,
+        { playerName: newPlayer.name, attended: 1, total: DEFAULT_ATTENDANCE_TOTAL },
+      ]);
+    } else {
+      // Count the session toward the existing player's attendance.
+      setAttendance((prev) =>
+        prev.map((a) =>
+          a.playerName === assessment.playerName
+            ? { ...a, attended: Math.min(a.attended + 1, a.total) }
+            : a
+        )
+      );
+    }
+    setAssessments((prev) => [...prev, assessment]);
+    setFormOpen(false);
+  }
+
+  // Auth gate: while checking, show a spinner; if required and not signed in,
+  // show the login screen. When auth isn't required this is always satisfied.
+  if (!authChecked) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-bg-primary text-text-muted">
+        <Loader2 className="animate-spin" size={20} />
+      </div>
+    );
+  }
+  if (authRequired() && !authed) {
+    return <Login />;
+  }
+
+  return (
+    <div className="min-h-screen bg-bg-primary font-body text-text-primary">
+      {/* Header */}
+      <header className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-bg-primary/95 px-4 py-4 backdrop-blur sm:px-6">
+        <div className="flex items-center gap-2">
+          <Shield size={20} className="text-accent-gold" />
+          <span className="font-heading text-xl tracking-wide">ACADEMY REPORT</span>
+          {!isLiveDataConfigured() && (
+            <span className="ml-2 hidden rounded bg-bg-card px-2 py-0.5 font-mono text-[10px] text-text-muted sm:inline">
+              demo data
+            </span>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setFormOpen(true)}
+            disabled={loading}
+            className="flex min-h-[36px] items-center gap-1.5 rounded-full bg-accent-gold px-4 py-1.5 text-sm font-medium text-bg-primary transition-opacity hover:opacity-90 disabled:opacity-50"
+          >
+            <Plus size={16} /> New assessment
+          </button>
+          {authRequired() && (
+            <button
+              onClick={() => supabase!.auth.signOut()}
+              title="Sign out"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-border text-text-muted transition-colors hover:border-border-hover hover:text-text-primary"
+            >
+              <LogOut size={16} />
+            </button>
+          )}
+        </div>
+      </header>
+
+      {loading ? (
+        <div className="flex items-center justify-center gap-2 py-32 text-text-muted">
+          <Loader2 className="animate-spin" size={18} />
+          <span className="font-mono text-sm">Loading squad…</span>
+        </div>
+      ) : (
+        <CoachView
+          profiles={profiles}
+          attendance={attendance}
+          goals={goals}
+          months={months}
+          activeMonth={activeMonth}
+          onMonthChange={setActiveMonth}
+          publishedNotes={publishedNotes}
+          onPublishNote={publishNote}
+          onToggleGoal={toggleGoal}
+        />
+      )}
+
+      {formOpen && (
+        <AssessmentForm
+          roster={roster}
+          onSubmit={addAssessment}
+          onClose={() => setFormOpen(false)}
+        />
+      )}
+    </div>
+  );
+}
