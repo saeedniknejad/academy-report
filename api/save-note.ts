@@ -84,12 +84,11 @@ export default async function handler(
       .insert({
         player_id: playerId,
         observation,
-        player_name: playerName ?? null,
-        age_group: ageGroup ?? null,
-        position: position ?? null,
-        session_type: sessionType ?? null,
-        theme: theme ?? null,
+        normalized_context: normalizedContext,
         context_hash: contextHash,
+        parent_note: note.parentNote,
+        try_at_home: note.tryAtHome,
+        coach_drill: note.coachDrill,
         generated_date: generatedDate,
         generated_note: note,
       })
