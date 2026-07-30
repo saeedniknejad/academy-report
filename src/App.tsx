@@ -55,26 +55,54 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      const [r, a, att, g] = await Promise.all([
-        getRoster(),
-        getAssessments({ audience: "coach" }),
-        getAttendance(),
-        getGoals(),
-      ]);
-      if (cancelled) return;
-      setRoster(r);
-      setAssessments(a);
-      setAttendance(att);
-      setGoals(g);
-      setLoading(false);
+    // Wait until Supabase finishes checking the existing session.
+    if (!authChecked) {
+      return;
     }
+
+    // When authentication is required, do not load academy data
+    // until a user has successfully signed in.
+    if (authRequired() && !authed) {
+      setLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function load() {
+      setLoading(true);
+
+      try {
+        const [r, a, att, g] = await Promise.all([
+          getRoster(),
+          getAssessments({ audience: "coach" }),
+          getAttendance(),
+          getGoals(),
+        ]);
+
+        if (cancelled) return;
+
+        setRoster(r);
+        setAssessments(a);
+        setAttendance(att);
+        setGoals(g);
+      } catch (error) {
+        if (!cancelled) {
+          console.error("Failed to load academy data:", error);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
+
     load();
+
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [authChecked, authed]);
 
   const profiles: PlayerProfile[] = useMemo(
     () => (roster.length ? buildAllProfiles(roster, assessments) : []),
