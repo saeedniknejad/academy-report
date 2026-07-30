@@ -116,3 +116,36 @@ export async function expandCoachNote(req: ExpandRequest): Promise<ExpandedNote>
 export function isAiConfigured(): boolean {
   return Boolean(AI_ENDPOINT);
 }
+
+export type SaveNoteRequest = {
+  playerId: string;
+  observation: string;
+  playerName?: string;
+  ageGroup?: string;
+  position?: string;
+  sessionType?: string;
+  theme?: string;
+  note: {
+    parentNote: string;
+    tryAtHome: string;
+    coachDrill: string;
+  };
+};
+
+export async function saveAiNote(payload: SaveNoteRequest) {
+  const response = await fetch("/api/save-note", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error ?? "Unable to save AI note.");
+  }
+
+  return data;
+}

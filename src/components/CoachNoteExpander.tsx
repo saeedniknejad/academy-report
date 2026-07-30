@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { MessageSquareText, Sparkles, ChevronRight, Loader2, Check, Send } from "lucide-react";
-import { expandCoachNote, isAiConfigured } from "../lib/ai";
+import { expandCoachNote, saveAiNote, isAiConfigured } from "../lib/ai";
 import type { ExpandedNote, PlayerProfile } from "../lib/types";
 import { Card, CardTitle } from "./ui";
 
@@ -59,10 +59,30 @@ export default function CoachNoteExpander({
     setNote({ ...note, [field]: value });
   }
 
-  function handlePublish() {
-    if (note && onPublish) {
-      onPublish(note);
+  async function handlePublish() {
+    if (!note) return;
+
+    const playerId = player.meta.id;
+
+    if (!playerId) {
+      console.error("Cannot save AI note: player ID is missing.");
+      return;
+    }
+
+    try {
+      await saveAiNote({
+        playerId,
+        observation,
+        playerName: player.meta.name,
+        ageGroup: player.meta.ageGroup,
+        position: player.latestPosition,
+        note,
+      });
+
+      onPublish?.(note);
       setJustPublished(true);
+    } catch (error) {
+      console.error("Failed to save AI note:", error);
     }
   }
 

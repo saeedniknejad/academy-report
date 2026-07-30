@@ -205,21 +205,6 @@ export default async function handler(req: any, res: any) {
       coachDrill: String(parsed.coachDrill ?? ""),
     };
 
-    const { data: savedGeneration, error: saveError } = await supabaseAdmin
-      .from("ai_generations")
-      .insert({
-        player_id: playerId,
-        context_hash: contextHash,
-        generated_date: today,
-        generated_note: generatedNote,
-      })
-      .select("id, generated_note")
-      .single();
-
-    if (saveError) {
-      throw saveError;
-    }
-
     return res.status(200).json({
       ...generatedNote,
       cached: false,
