@@ -136,6 +136,7 @@ export default function CoachNoteExpander({
           {onPublish && (
             <div className="flex items-center gap-3 pt-1">
               <button
+                type={"button"}
                 onClick={handlePublish}
                 className="flex min-h-[40px] items-center gap-1.5 rounded-md border border-accent-green bg-accent-green/15 px-3 py-2 text-sm font-medium text-[#8FC7FF] transition-colors hover:bg-accent-green/25"
               >
