@@ -119,7 +119,7 @@ export default async function handler(req: any, res: any) {
       .from("ai_generations")
       .select("id, context_hash, generated_note")
       .eq("player_id", playerId)
-      .eq("generation_date", today)
+      .eq("generated_date", today)
       .maybeSingle();
 
     if (cacheError) {
@@ -146,7 +146,7 @@ export default async function handler(req: any, res: any) {
         dailyLimitReached: true,
       });
     }
-    
+
     if (cacheError) {
       throw cacheError;
     }
@@ -210,8 +210,8 @@ export default async function handler(req: any, res: any) {
       .insert({
         player_id: playerId,
         context_hash: contextHash,
-        generation_date: today,
-        generated_note: JSON.stringify(generatedNote),
+        generated_date: today,
+        generated_note: generatedNote,
       })
       .select("id, generated_note")
       .single();
