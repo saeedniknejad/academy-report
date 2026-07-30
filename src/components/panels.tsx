@@ -62,7 +62,17 @@ export function GoalsPanel({
             setGoalText("");
         } catch (error) {
             console.error("Goal creation failed:", error);
-            setError("The goal could not be saved. Please try again.");
+
+            const message =
+                error instanceof Error
+                    ? error.message
+                    : typeof error === "object" &&
+                            error !== null &&
+                            "message" in error
+                        ? String(error.message)
+                        : "Unknown database error.";
+
+            setError(`The goal could not be saved: ${message}`);
         } finally {
             setSaving(false);
         }
