@@ -23,6 +23,7 @@ Rules:
 - Use simple language (no tactical jargon for parents)
 - Keep the parent version to 2-3 sentences max
 - Make the drill actionable and fun for the age group
+- Do not include the playr's name or any specific identifiable information. Refer to the player only as "the player" or "your child" or "they".
 
 Return ONLY strict minified JSON with exactly these keys: {"parentNote": string, "tryAtHome": string, "coachDrill": string}`;
 

@@ -43,7 +43,6 @@ export default function CoachNoteExpander({
       const result = await expandCoachNote({
         playerId,
         observation,
-        playerName: player.meta.name,
         ageGroup: player.meta.ageGroup,
         position: player.latestPosition,
       });
