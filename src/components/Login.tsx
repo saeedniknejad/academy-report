@@ -1,81 +1,138 @@
 import { useState } from "react";
-import { Shield, Loader2, Mail, Check } from "lucide-react";
+import { Shield, Loader2, LogIn, Eye, EyeOff } from "lucide-react";
 import { supabase } from "../lib/supabase";
 
-/**
- * Magic-link sign-in for the coach. Shown only when VITE_REQUIRE_AUTH=true and
- * Supabase is configured. Enters an email, Supabase emails a one-click link, and
- * on return the session is picked up by the auth listener in App.
- */
 export default function Login() {
   const [email, setEmail] = useState("");
-  const [sending, setSending] = useState(false);
-  const [sent, setSent] = useState(false);
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [signingIn, setSigningIn] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (!email.trim()) return setError("Enter your email.");
-    setSending(true);
+
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!normalizedEmail) {
+      setError("Enter your email address.");
+      return;
+    }
+
+    if (!password) {
+      setError("Enter your password.");
+      return;
+    }
+
+    if (!supabase) {
+      setError("Authentication is not configured.");
+      return;
+    }
+
+    setSigningIn(true);
+
     try {
-      const { error } = await supabase!.auth.signInWithOtp({
+      const { error } = await supabase!.auth.signInWithPassword({
         email: email.trim(),
-        options: { emailRedirectTo: window.location.origin },
+        password,
       });
-      if (error) throw error;
-      setSent(true);
+
+      if (error) {
+        console.error("Sign-in failed:", error.code);
+        setError("Invalid email or password.");
+        return;
+      }
     } catch (err) {
-      console.error(err);
-      setError("Couldn't send the link. Check the email and try again.");
+      console.error("Unexpected sign-in error:", err);
+      setError("Unable to sign in. Please try again.");
     } finally {
-      setSending(false);
+      setSigningIn(false);
     }
   }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-bg-primary p-4">
       <div className="w-full max-w-sm rounded-card border border-border bg-bg-card p-6">
-        <div className="mb-4 flex items-center gap-2">
+        <div className="mb-5 flex items-center gap-2">
           <Shield size={22} className="text-accent-gold" />
-          <span className="font-heading text-xl tracking-wide">ACADEMY REPORT</span>
+          <span className="font-heading text-xl tracking-wide">
+            ACADEMY REPORT
+          </span>
         </div>
 
-        {sent ? (
-          <div className="rounded-md border border-accent-green/40 bg-accent-green/10 p-4">
-            <div className="mb-1 flex items-center gap-2 text-accent-green">
-              <Check size={16} />
-              <span className="font-heading text-lg">Check your email</span>
-            </div>
-            <p className="text-sm text-text-secondary">
-              We sent a sign-in link to <span className="text-text-primary">{email}</span>. Open it
-              on this device to continue.
-            </p>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit}>
-            <p className="mb-4 text-sm text-text-secondary">
-              Coach sign-in. Enter your email and we'll send you a one-click link.
-            </p>
-            <label className="mb-1 block text-sm text-text-secondary">Email</label>
+        <form onSubmit={handleSubmit}>
+          <p className="mb-5 text-sm text-text-secondary">
+            Sign in using your authorized coach account.
+          </p>
+
+          <label
+            htmlFor="email"
+            className="mb-1 block text-sm text-text-secondary"
+          >
+            Email
+          </label>
+
+          <input
+            id="email"
+            type="email"
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="coach@academy.com"
+            disabled={signingIn}
+            className="mb-3 w-full rounded-md border border-border bg-bg-primary px-3 py-2 text-sm text-text-primary outline-none focus:border-border-hover disabled:opacity-60"
+          />
+
+          <label
+            htmlFor="password"
+            className="mb-1 block text-sm text-text-secondary"
+          >
+            Password
+          </label>
+
+          <div className="relative mb-3">
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="coach@academy.com"
-              className="mb-3 w-full rounded-md border border-border bg-bg-primary px-3 py-2 text-sm text-text-primary outline-none focus:border-border-hover"
+              id="password"
+              type={showPassword ? "text" : "password"}
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your password"
+              disabled={signingIn}
+              className="w-full rounded-md border border-border bg-bg-primary px-3 py-2 pr-10 text-sm text-text-primary outline-none focus:border-border-hover disabled:opacity-60"
             />
-            {error && <p className="mb-3 font-mono text-xs text-[#E58F86]">{error}</p>}
+
             <button
-              type="submit"
-              disabled={sending}
-              className="flex min-h-[40px] w-full items-center justify-center gap-1.5 rounded-md bg-accent-gold px-4 py-2 text-sm font-medium text-bg-primary transition-opacity hover:opacity-90 disabled:opacity-60"
+              type="button"
+              onClick={() => setShowPassword((current) => !current)}
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-text-muted hover:text-text-primary"
             >
-              {sending ? <Loader2 size={14} className="animate-spin" /> : <Mail size={14} />}
-              Send sign-in link
+              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
-          </form>
-        )}
+          </div>
+
+          {error && (
+            <p className="mb-3 font-mono text-xs text-[#E58F86]">
+              {error}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={signingIn}
+            className="flex min-h-[40px] w-full items-center justify-center gap-1.5 rounded-md bg-accent-gold px-4 py-2 text-sm font-medium text-bg-primary transition-opacity hover:opacity-90 disabled:opacity-60"
+          >
+            {signingIn ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : (
+              <LogIn size={14} />
+            )}
+
+            {signingIn ? "Signing in..." : "Sign in"}
+          </button>
+        </form>
       </div>
     </div>
   );
