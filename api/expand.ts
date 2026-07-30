@@ -151,19 +151,6 @@ export default async function handler(req: any, res: any) {
       throw cacheError;
     }
 
-    if (cachedGeneration) {
-      const cachedNote =
-        typeof cachedGeneration.generated_note === "string"
-          ? JSON.parse(cachedGeneration.generated_note)
-          : cachedGeneration.generated_note
-      return res.status(200).json({
-        parentNote: String(cachedNote.parentNote ?? ""),
-        tryAtHome: String(cachedNote.tryAtHome ?? ""),
-        coachDrill: String(cachedNote.coachDrill ?? ""),
-        cached: true,
-      });
-    }
-
     const userPrompt = [
       `Coach observation: "${observation}"`,
       playerName ? `Player: ${playerName}` : "",
