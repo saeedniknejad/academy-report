@@ -83,6 +83,12 @@ export default async function handler(
       .from("ai_generations")
       .insert({
         player_id: playerId,
+        observation,
+        player_name: playerName ?? null,
+        age_group: ageGroup ?? null,
+        position: position ?? null,
+        session_type: sessionType ?? null,
+        theme: theme ?? null,
         context_hash: contextHash,
         generated_date: generatedDate,
         generated_note: note,
