@@ -159,3 +159,29 @@ export interface ExpandedNote {
   tryAtHome: string;
   coachDrill: string;
 }
+
+export interface AiGeneration {
+  id: string;
+  playerId: string;
+  observation: string;
+  normalizedContext: string;
+  contextHash: string;
+  parentNote: string;
+  tryAtHome: string;
+  coachDrill: string;
+  generatedDate: string;
+  createdAt: string;
+}
+
+export interface AiGenerationResult {
+  generation: AiGeneration;
+  source: "ai" | "cache";
+}
+
+export interface AiNoteHistoryItem {
+  id: string;
+  playerId: string;
+  generationId: string;
+  savedAt: string;
+  generation?: AiGeneration;
+}

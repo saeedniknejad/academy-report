@@ -63,7 +63,13 @@ export default function CoachView({
     setBatchRunning(true);
     setBatchDone(0);
     for (const p of profiles) {
+      if (!p.meta.id) {
+        console.warn(`Player ${p.meta.name} is missing an ID.`);
+        continue;
+      }
+
       const note = await expandCoachNote({
+        playerId: p.meta.id,
         observation: p.latestAreaToDevelop ?? "overall development this month",
         playerName: p.meta.name,
         ageGroup: p.meta.ageGroup,

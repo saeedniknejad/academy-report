@@ -29,15 +29,25 @@ export default function CoachNoteExpander({
   const [justPublished, setJustPublished] = useState(false);
 
   async function handleExpand() {
+    const playerId = player.meta.id;
+
+    if (!playerId) {
+      console.error("Cannot generate AI note: player ID is missing.");
+      return;
+    }
+
     setLoading(true);
     setJustPublished(false);
+
     try {
       const result = await expandCoachNote({
+        playerId,
         observation,
         playerName: player.meta.name,
         ageGroup: player.meta.ageGroup,
         position: player.latestPosition,
       });
+
       setNote(result);
     } finally {
       setLoading(false);

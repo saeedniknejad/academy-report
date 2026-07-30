@@ -26,10 +26,13 @@ Rules:
 Return strict JSON: { "parentNote": string, "tryAtHome": string, "coachDrill": string }`;
 
 export interface ExpandRequest {
+  playerId: string;
   observation: string;
   playerName?: string;
   ageGroup?: string;
   position?: string;
+  sessionType?: string;
+  theme?: string
 }
 
 async function callEndpoint(req: ExpandRequest): Promise<ExpandedNote> {
