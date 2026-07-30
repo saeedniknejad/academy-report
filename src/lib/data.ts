@@ -383,3 +383,52 @@ export async function toggleGoalStatus(
   const { error } = await supabase!.from("goals").update({ status: nextStatus }).eq("id", id);
   if (error) throw error;
 }
+
+/** Create a new player goal and return the saved database row. */
+export async function createGoal(
+  playerName: string,
+  text: string
+): Promise<Goal> {
+  const cleanText = text.trim();
+
+  if (!cleanText) {
+    throw new Error("Goal text cannot be empty.");
+  }
+
+  if (!isSupabaseConfigured()) {
+    return {
+      id: crypto.randomUUID(),
+      playerName,
+      text: cleanText,
+      status: "in-progress",
+    };
+  }
+
+  const { data, error } = await supabase!
+    .from("goals")
+    .insert({
+      player_name: playerName,
+      text: cleanText,
+      status: "in-progress",
+    })
+    .select("id, player_name, text, status")
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  if (!data) {
+    throw new Error("The goal was saved but no record was returned.");
+  }
+
+  return {
+    id: String(data.id),
+    playerName: String(data.player_name),
+    text: String(data.text),
+    status:
+      String(data.status) === "achieved"
+        ? "achieved"
+        : "in-progress",
+  };
+}

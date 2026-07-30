@@ -5,6 +5,7 @@ import AssessmentForm from "./components/AssessmentForm";
 import Login from "./components/Login";
 import { authRequired, supabase } from "./lib/supabase";
 import {
+  createGoal,
   getAssessments,
   getAttendance,
   getGoals,
@@ -117,6 +118,23 @@ export default function App() {
 
   function publishNote(playerName: string, note: ExpandedNote) {
     setPublishedNotes((prev) => ({ ...prev, [playerName]: note }));
+  }
+
+  async function addGoal(
+    playerName: string,
+    goalText: string
+  ): Promise<void> {
+    try {
+      const savedGoal = await createGoal(playerName, goalText);
+
+      setGoals((previousGoals) => [
+        ...previousGoals,
+        savedGoal,
+      ]);
+    } catch (error) {
+      console.error("Failed to create goal:", error);
+      throw error;
+    }
   }
 
   function toggleGoal(id: string) {
@@ -232,6 +250,7 @@ export default function App() {
           onMonthChange={setActiveMonth}
           publishedNotes={publishedNotes}
           onPublishNote={publishNote}
+          onAddGoal={addGoal}
           onToggleGoal={toggleGoal}
         />
       )}
