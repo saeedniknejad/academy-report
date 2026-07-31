@@ -416,6 +416,10 @@ export async function saveAssessment(
   let assessmentError;
 
   if (assessment.id) {
+    console.log("Updating assessment:", {
+      id: assessment.id,
+      row: assessmentRow
+    });
     const result = await supabase!
       .from("assessments")
       .update({
@@ -425,6 +429,12 @@ export async function saveAssessment(
       .eq("id", assessment.id)
       .select("id, updated_at")
       .single();
+
+    console.log("Assessment update result:", {
+      data: result.data,
+      error: result.error
+    });
+
     assessmentError = result.error;
   } else {
     const result = await supabase!
