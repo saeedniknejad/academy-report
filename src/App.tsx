@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Shield, Loader2, Plus, LogOut } from "lucide-react";
 import CoachView from "./components/CoachView";
 import AssessmentForm from "./components/AssessmentForm";
+import AssessmentRecords from "./components/AssessmentRecords";
 import Login from "./components/Login";
 import { authRequired, supabase } from "./lib/supabase";
 import {
@@ -36,6 +37,8 @@ export default function App() {
   const [publishedNotes, setPublishedNotes] = useState<Record<string, ExpandedNote>>({});
   const [activeMonth, setActiveMonth] = useState("Current");
   const [formOpen, setFormOpen] = useState(false);
+  const [recordsOpen, setRecordsOpen] = useState(false);
+  const [assessmentMenuOpen, setAssessmentMenuOpen] = useState(false);
 
   // ---- Auth (only enforced when VITE_REQUIRE_AUTH=true + Supabase set) ----
   const [authed, setAuthed] = useState(!authRequired());
@@ -226,13 +229,55 @@ function toggleGoal(id: string) {
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setFormOpen(true)}
-            disabled={loading}
-            className="flex min-h-[36px] items-center gap-1.5 rounded-full bg-accent-gold px-4 py-1.5 text-sm font-medium text-bg-primary transition-opacity hover:opacity-90 disabled:opacity-50"
-          >
-            <Plus size={16} /> New assessment
-          </button>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setAssessmentMenuOpen((open) => !open)}
+              disabled={loading}
+              aria-expanded={assessmentMenuOpen}
+              aria-haspopup="menu"
+              className="flex min-h-[36px] items-center gap-1.5 rounded-full bg-accent-gold px-4 py-1.5 text-sm font-medium text-bg-primary transition-opacity hover:opacity-90 disabled:opacity-50"
+            >
+              <Plus size={16} />
+              Assessment
+              <span aria-hidden="true" className="text-xs">
+                ▾
+              </span>
+            </button>
+
+            {assessmentMenuOpen && (
+              <div
+                role="menu"
+                className="absolute right-0 top-full z-30 mt-2 w-52 overflow-hidden rounded-md border border-border bg-bg-card shadow-xl"
+              >
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setAssessmentMenuOpen(false);
+                    setFormOpen(true);
+                  }}
+                  className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-text-primary transition-colors hover:bg-bg-card-hover"
+                >
+                  <Plus size={15} className="text-accent-gold" />
+                  New Assessment
+                </button>
+
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setAssessmentMenuOpen(false);
+                    setRecordsOpen(true);
+                  }}
+                  className="flex w-full items-center px-4 py-3 text-left text-sm text-text-primary transition-colors hover:bg-bg-card-hover"
+                >
+                  Assessment Records
+                </button>
+              </div>
+            )}
+          </div>
+
           {authRequired() && (
             <button
               onClick={() => supabase!.auth.signOut()}
@@ -271,6 +316,10 @@ function toggleGoal(id: string) {
           onSubmit={addAssessment}
           onClose={() => setFormOpen(false)}
         />
+      )}
+
+      {recordsOpen && (
+          <AssessmentRecords assessments={assessments} roster={roster} onClose={() => setRecordsOpen(false)} />
       )}
     </div>
   );
