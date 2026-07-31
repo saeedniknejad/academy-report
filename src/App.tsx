@@ -38,6 +38,7 @@ export default function App() {
   const [activeMonth, setActiveMonth] = useState("Current");
   const [formOpen, setFormOpen] = useState(false);
   const [recordsOpen, setRecordsOpen] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null> (null);
   const [assessmentMenuOpen, setAssessmentMenuOpen] = useState(false);
 
   // ---- Auth (only enforced when VITE_REQUIRE_AUTH=true + Supabase set) ----
@@ -107,6 +108,20 @@ export default function App() {
       cancelled = true;
     };
   }, [authChecked, authed]);
+
+  useEffect(() => {
+    if (!successMessage) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setSuccessMessage(null);
+    }, 3000);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [successMessage]);
 
   const profiles: PlayerProfile[] = useMemo(
     () => (roster.length ? buildAllProfiles(roster, assessments) : []),
@@ -197,7 +212,19 @@ function toggleGoal(id: string) {
         )
       );
     }
-    setAssessments((prev) => [...prev, assessment]);
+    setAssessments((prev) =>
+        assessment.id
+            ? prev.map((item) =>
+                item.id === assessment.id ? assessment : item
+              )
+            : [...prev, assessment]);
+
+    setSuccessMessage(
+        assessment.id
+          ? "Assessment Updated Successfully"
+          : "Assessment Saved Successfully"
+    );
+
     setFormOpen(false);
   }
 
@@ -320,6 +347,12 @@ function toggleGoal(id: string) {
 
       {recordsOpen && (
           <AssessmentRecords assessments={assessments} roster={roster} onClose={() => setRecordsOpen(false)} />
+      )}
+
+      {successMessage && (
+        <div className="fixed bottom-6 right-6 z-50 rounded-lg bg-accent-green px-4 py-3 text-sm font-medium text-white shadow-xl">
+          {successMessage}
+        </div>
       )}
     </div>
   );
