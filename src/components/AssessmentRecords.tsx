@@ -1,3 +1,4 @@
+import { useMemo, useState } from "react";
 import { X } from "lucide-react";
 import type { Assessment, PlayerMeta } from "../lib/types";
 
@@ -12,17 +13,36 @@ export default function AssessmentRecords({
   roster,
   onClose,
 }: AssessmentRecordsProps) {
-  const playerNameById = new Map(
+    const [searchText, setSearchText] = useState("");
+    const playerNameById = new Map(
     roster
       .filter((player) => player.id)
       .map((player) => [player.id as string, player.name])
   );
 
-  const sortedAssessments = [...assessments].sort(
-    (a, b) =>
-      new Date(b.timestamp).getTime() -
-      new Date(a.timestamp).getTime()
-  );
+  const filteredAssessments = useMemo(() => {
+      const normalizedSearch = searchText.trim().toLowerCase();
+
+      return [...assessments]
+        .filter((assessment) => {
+          if (!normalizedSearch) {
+            return true;
+          }
+
+          const playerName = assessment.playerId
+            ? playerNameById.get(assessment.playerId)
+            : assessment.playerName;
+
+          return (playerName ?? "")
+            .toLowerCase()
+            .includes(normalizedSearch);
+        })
+        .sort(
+          (a, b) =>
+            new Date(b.timestamp).getTime() -
+            new Date(a.timestamp).getTime()
+        );
+    }, [assessments, playerNameById, searchText]);
 
   return (
     <div
@@ -62,13 +82,20 @@ export default function AssessmentRecords({
         </div>
 
         <div className="max-h-[70vh] overflow-y-auto p-5">
-          {sortedAssessments.length === 0 ? (
+        <input
+          type="search"
+          value={searchText}
+          onChange={(event) => setSearchText(event.target.value)}
+          placeholder="Search player..."
+          className="mb-4 w-full rounded-md border border-border bg-bg-primary px-3 py-2 text-sm text-text-primary outline-none transition-colors placeholder:text-text-muted focus:border-border-hover"
+        />
+          {filteredAssessments.length === 0 ? (
             <p className="rounded-md border border-border bg-bg-primary px-4 py-6 text-center text-sm text-text-muted">
               No assessment records found.
             </p>
           ) : (
             <ul className="space-y-2">
-              {sortedAssessments.map((assessment, index) => {
+              {filteredAssessments.map((assessment, index) => {
                 const playerName =
                   assessment.playerId
                     ? playerNameById.get(assessment.playerId)
