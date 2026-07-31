@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { X, ClipboardList, Loader2, UserPlus } from "lucide-react";
 import {
   POSITIONS,
@@ -12,6 +12,7 @@ import {
   type SessionType,
   type SkillKey,
 } from "../lib/types";
+import { getAssessmentByIdentity} from "../lib/data";
 
 interface AssessmentFormProps {
   roster: PlayerMeta[];
@@ -62,8 +63,83 @@ export default function AssessmentForm({ roster, onSubmit, onClose }: Assessment
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [existingAssessment, setExistingAssessment] =
+  useState<Assessment | null>(null);
+
+  const [checkingExisting, setCheckingExisting] = useState(false);
 
   const isNewPlayer = playerSelect === ADD_NEW;
+
+  const selectedPlayerName = roster.find((player) => player.id === playerSelect)?.name ?? "";
+
+  useEffect(() => {
+  if (isNewPlayer || !playerSelect || !date) {
+    setExistingAssessment(null);
+    setCheckingExisting(false);
+    return;
+  }
+
+  let cancelled = false;
+
+  async function checkExistingAssessment() {
+    setCheckingExisting(true);
+    setError(null);
+
+    try {
+      const existing = await getAssessmentByIdentity(
+        playerSelect,
+        date,
+        sessionType
+      );
+
+      if (cancelled) return;
+
+      setExistingAssessment(existing);
+
+      if (existing) {
+        setAssessedBy(existing.assessedBy);
+        setPosition(existing.position);
+        setScores(existing.scores);
+        setHighlight(existing.highlight ?? "");
+        setAreaToDevelop(existing.areaToDevelop ?? "");
+        setInternalNotes(existing.internalNotes ?? "");
+      } else {
+        const selectedPlayer = roster.find(
+          (player) => player.id === playerSelect
+        );
+
+        const defaultScores = {} as Record<SkillKey, number>;
+        SKILL_KEYS.forEach((key) => {
+          defaultScores[key] = 3;
+        });
+
+        setPosition((selectedPlayer?.primaryPosition ?? "Midfielder") as Position);
+        setScores(defaultScores);
+        setHighlight("");
+        setAreaToDevelop("");
+        setInternalNotes("");
+      }
+    } catch (error) {
+      if (cancelled) return;
+
+      console.error("Existing assessment lookup failed:", error);
+      setExistingAssessment(null);
+      setError(
+        "The app could not check whether this assessment already exists."
+      );
+    } finally {
+      if (!cancelled) {
+        setCheckingExisting(false);
+      }
+    }
+  }
+
+  checkExistingAssessment();
+
+  return () => {
+    cancelled = true;
+  };
+}, [playerSelect, date, sessionType, isNewPlayer, roster]);
 
   function setScore(key: SkillKey, value: number) {
     setScores((prev) => ({ ...prev, [key]: value }));
@@ -110,6 +186,9 @@ export default function AssessmentForm({ roster, onSubmit, onClose }: Assessment
     if (!date) return setError("Pick the session date.");
 
     const assessment: Assessment = {
+      id: existingAssessment?.id,
+      createdAt: existingAssessment?.createdAt,
+      updatedAt: existingAssessment?.updatedAt,
       timestamp: new Date().toISOString(),
       playerId,
       playerName,
@@ -160,7 +239,7 @@ export default function AssessmentForm({ roster, onSubmit, onClose }: Assessment
         <div className="flex items-center justify-between border-b border-border px-5 py-4">
           <div className="flex items-center gap-2">
             <ClipboardList size={18} className="text-accent-gold" />
-            <h2 className="font-heading text-xl">New Assessment</h2>
+            <h2 className="font-heading text-xl">{existingAssessment ? "Edit Assessment" : "New Assessment"}</h2>
           </div>
           <button
             type="button"
@@ -173,6 +252,49 @@ export default function AssessmentForm({ roster, onSubmit, onClose }: Assessment
         </div>
 
         <div className="max-h-[70vh] space-y-5 overflow-y-auto px-5 py-5">
+          {!isNewPlayer && (
+            <div
+              className={`rounded-md border px-4 py-3 ${
+                existingAssessment
+                  ? "border-accent-gold/50 bg-accent-gold/10"
+                  : "border-accent-green/50 bg-accent-green/10"
+              }`}
+            >
+              <p
+                className={`font-mono text-[11px] font-medium uppercase tracking-wider ${
+                  existingAssessment
+                    ? "text-accent-gold"
+                    : "text-accent-green"
+                }`}
+              >
+                {checkingExisting
+                  ? "Checking assessment…"
+                  : existingAssessment
+                    ? "Editing Existing Assessment"
+                    : "New Assessment"}
+              </p>
+
+              {!checkingExisting && (
+                <p className="mt-1 text-sm text-text-secondary">
+                  {selectedPlayerName} ·{" "}
+                  {new Date(`${date}T12:00:00`).toLocaleDateString(undefined, {
+                    month: "long",
+                    day: "numeric",
+                    year: "numeric",
+                  })}{" "}
+                  · {sessionType}
+                </p>
+              )}
+
+              {existingAssessment && !checkingExisting && (
+                <p className="mt-1 font-mono text-[10px] text-text-muted">
+                  An assessment already exists for this player, date, and session
+                  type. Changes will update the existing record.
+                </p>
+              )}
+            </div>
+          )}
+
           {/* Session details */}
           <fieldset className="space-y-3">
             <Legend>Session details</Legend>
@@ -348,11 +470,20 @@ export default function AssessmentForm({ roster, onSubmit, onClose }: Assessment
           </button>
           <button
             type="submit"
-            disabled={submitting}
+            disabled={submitting || checkingExisting}
             className="flex min-h-[40px] items-center gap-1.5 rounded-md bg-accent-gold px-4 py-2 text-sm font-medium text-bg-primary transition-opacity hover:opacity-90 disabled:opacity-60"
           >
-            {submitting && <Loader2 size={14} className="animate-spin" />}
-            Save assessment
+            {(submitting || checkingExisting) && (<Loader2 size={14} className="animate-spin" />)}
+            {checkingExisting
+              ? "Checking..."
+              : submitting
+                ? existingAssessment
+                  ? "Updating..."
+                  : "Saving..."
+              : existingAssessment
+                ? "Update Assessment"
+                : "Save Assessment"
+            }
           </button>
         </div>
       </form>

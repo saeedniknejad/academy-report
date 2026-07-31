@@ -78,6 +78,9 @@ function dbRowToAssessment(row: Record<string, unknown>): Assessment {
     scores[k] = !Number.isNaN(v) && v >= 1 && v <= 5 ? v : 3;
   });
   return {
+    id: row.id ? String(row.id) : undefined,
+    createdAt: row.created_at ? String(row.created_at) : undefined,
+    updatedAt: row.updated_at ? String(row.updated_at) : undefined,
     timestamp: String(row.created_at ?? `${row.date}T00:00:00.000Z`),
     playerId:row.player_id ? String(row.player_id): undefined,
     playerName: String(row.player_name),
@@ -223,6 +226,33 @@ export async function getAssessments(
   return rows;
 }
 
+/** Find one assessment by player, session date, and session type. */
+export async function getAssessmentByIdentity(
+  playerId: string,
+  date: string,
+  sessionType: SessionType
+): Promise<Assessment | null> {
+  if (!isSupabaseConfigured()) {
+    return null;
+  }
+
+  const { data, error } = await supabase!
+    .from("assessments")
+    .select("*")
+    .eq("player_id", playerId)
+    .eq("date", date)
+    .eq("session_type", sessionType)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  return data
+    ? dbRowToAssessment(data as Record<string, unknown>)
+    : null;
+}
+
 export async function getRoster(): Promise<PlayerMeta[]> {
   if (isSupabaseConfigured()) {
     try {
@@ -339,51 +369,87 @@ export async function saveAssessment(
   assessment: Assessment,
   newPlayer?: PlayerMeta
 ): Promise<void> {
-  if (!isSupabaseConfigured()) return; // demo mode: state-only, handled in App
+  if (!isSupabaseConfigured()) {
+    return;
+  }
 
   if (newPlayer) {
-    const { data: createdPlayer, error: pErr } =
-      await supabase!
-        .from("players")
-        .insert({
-          player_name: newPlayer.name,
-          number: newPlayer.number,
-          primary_position: newPlayer.primaryPosition,
-          age_group: newPlayer.ageGroup,
-        })
-        .select("id")
-        .single();
+    const { data: createdPlayer, error: playerError } = await supabase!
+      .from("players")
+      .insert({
+        player_name: newPlayer.name,
+        number: newPlayer.number,
+        primary_position: newPlayer.primaryPosition,
+        age_group: newPlayer.ageGroup,
+      })
+      .select("id")
+      .single();
 
-    if (pErr) throw pErr;
+    if (playerError) {
+      throw playerError;
+    }
 
     if (!createdPlayer?.id) {
       throw new Error(
         "The new player was created without a player ID."
       );
     }
+
     assessment.playerId = String(createdPlayer.id);
 
-    const { error: aErr } = await supabase!.from("attendance").insert({
-      id: createdPlayer.id,
-      player_name: newPlayer.name,
-      attended: 1,
-      total: DEFAULT_ATTENDANCE_TOTAL,
-    });
-    if (aErr) throw aErr;
+    const { error: attendanceError } = await supabase!
+      .from("attendance")
+      .insert({
+        id: createdPlayer.id,
+        player_name: newPlayer.name,
+        attended: 1,
+        total: DEFAULT_ATTENDANCE_TOTAL,
+      });
+
+    if (attendanceError) {
+      throw attendanceError;
+    }
   }
 
-  const { error: assessmentError } = await supabase!.from("assessments").insert(assessmentToDbRow(assessment));
-  if (assessmentError) throw assessmentError;
+  const assessmentRow = assessmentToDbRow(assessment);
 
-  if (!newPlayer) {
-    // Increment attendance for the existing player (best-effort).
+  let assessmentError;
+
+  if (assessment.id) {
+    const result = await supabase!
+      .from("assessments")
+      .update({
+        ...assessmentRow,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", assessment.id);
+
+    assessmentError = result.error;
+  } else {
+    const result = await supabase!
+      .from("assessments")
+      .insert(assessmentRow);
+
+    assessmentError = result.error;
+  }
+
+  if (assessmentError) {
+    throw assessmentError;
+  }
+
+  if (!newPlayer && !assessment.id) {
     const { data } = await supabase!
       .from("attendance")
       .select("attended,total")
       .eq("player_name", assessment.playerName)
       .maybeSingle();
+
     if (data) {
-      const attended = Math.min(Number(data.attended) + 1, Number(data.total));
+      const attended = Math.min(
+        Number(data.attended) + 1,
+        Number(data.total)
+      );
+
       await supabase!
         .from("attendance")
         .update({ attended })

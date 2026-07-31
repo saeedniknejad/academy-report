@@ -84,6 +84,9 @@ export const SCALE_LABELS: Record<number, string> = {
 
 /** One assessment row — 1:1 with a form submission / sheet row. */
 export interface Assessment {
+  id?: string;
+  createdAt?: string;
+  updatedAt?: string;
   timestamp: string; // ISO — auto from the form
   playerId?: string;
   playerName: string;
