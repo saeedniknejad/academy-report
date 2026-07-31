@@ -422,8 +422,9 @@ export async function saveAssessment(
         ...assessmentRow,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", assessment.id);
-
+      .eq("id", assessment.id)
+      .select("id, updated_at")
+      .single();
     assessmentError = result.error;
   } else {
     const result = await supabase!
