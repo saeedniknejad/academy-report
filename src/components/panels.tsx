@@ -26,15 +26,15 @@ export function AttendancePanel({ record }: { record?: AttendanceRecord }) {
 
 /** Player goal creation and status management. */
 export function GoalsPanel({
-    playerName,
+    playerId,
     goals,
     onAdd,
     onToggle,
 }: {
-    playerName: string;
+    playerId: string;
     goals: Goal[];
     onAdd?: (
-        playerName: string,
+        playerId: string,
         goalText: string
     ) => Promise<void>;
     onToggle?: (id: string) => void;
@@ -58,7 +58,7 @@ export function GoalsPanel({
         setError(null);
 
         try {
-            await onAdd(playerName, cleanText);
+            await onAdd(playerId, cleanText);
             setGoalText("");
         } catch (error) {
             console.error("Goal creation failed:", error);
@@ -91,14 +91,14 @@ export function GoalsPanel({
                     className="mb-4 space-y-2"
                 >
                     <label
-                        htmlFor={`goal-${playerName}`}
+                        htmlFor={`goal-${playerId}`}
                         className="block font-mono text-[10px] uppercase tracking-wider text-text-muted"
                     >
                         Add a development goal
                     </label>
 
                     <textarea
-                        id={`goal-${playerName}`}
+                        id={`goal-${playerId}`}
                         value={goalText}
                         onChange={(event) => setGoalText(event.target.value)}
                         placeholder="Example: Scan before receiving the ball"

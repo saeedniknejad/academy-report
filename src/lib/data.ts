@@ -9,7 +9,6 @@
 import {
   MOCK_ASSESSMENTS,
   MOCK_ATTENDANCE,
-  MOCK_GOALS,
   ROSTER,
 } from "./mockData";
 import type {
@@ -282,28 +281,47 @@ export async function getAttendance(childName?: string): Promise<AttendanceRecor
   return MOCK_ATTENDANCE;
 }
 
-/** Goals for a single child (parent) or the whole squad (coach). */
-export async function getGoals(childName?: string): Promise<Goal[]> {
-  if (isSupabaseConfigured()) {
-    try {
-      const { data, error } = await supabase!.from("goals").select("*");
-      if (error) throw error;
-      let rows: Goal[] = (data ?? []).map((r) => ({
-        id: String(r.id),
-        playerName: String(r.player_name),
-        text: String(r.text),
-        status: (String(r.status) === "achieved" ? "achieved" : "in-progress") as
-          | "achieved"
-          | "in-progress",
-      }));
-      if (childName) rows = rows.filter((g) => g.playerName === childName);
-      return rows;
-    } catch (err) {
-      console.error("Supabase goals read failed, falling back to mock:", err);
-    }
+/** Goals for a single player or the whole squad. */
+export async function getGoals(playerId?: string): Promise<Goal[]> {
+  if (!isSupabaseConfigured()) {
+    return [];
   }
-  if (childName) return MOCK_GOALS.filter((g) => g.playerName === childName);
-  return MOCK_GOALS;
+
+  try {
+    let query = supabase!
+      .from("goals")
+      .select(
+        "id, player_id, text, status, created_at, updated_at, achieved_at"
+      );
+
+    if (playerId) {
+      query = query.eq("player_id", playerId);
+    }
+
+    const { data, error } = await query.order("created_at", {ascending: true});
+
+    if (error) {
+      throw error;
+    }
+
+    return (data ?? []).map((row) => ({
+      id: String(row.id),
+      playerId: String(row.player_id),
+      text: String(row.text),
+      status:
+        String(row.status) === "achieved"
+          ? "achieved"
+          : "in-progress",
+      createdAt: String(row.created_at),
+      updatedAt: String(row.updated_at),
+      achievedAt: row.achieved_at
+        ? String(row.achieved_at)
+        : null
+    }));
+  } catch (error) {
+    console.error("Supabase goals read failed:", error);
+    throw error;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -378,15 +396,42 @@ export async function saveAssessment(
 export async function toggleGoalStatus(
   id: string,
   nextStatus: "achieved" | "in-progress"
-): Promise<void> {
-  if (!isSupabaseConfigured()) return;
-  const { error } = await supabase!.from("goals").update({ status: nextStatus }).eq("id", id);
-  if (error) throw error;
+): Promise<Goal> {
+  if (!isSupabaseConfigured()) {
+    throw new Error("Supabase is not configured.");
+  }
+  const now = new Date().toISOString();
+  const { data, error } = await supabase!
+      .from("goals")
+      .update({
+        status: nextStatus,
+        updated_at: now,
+        achieved_at: nextStatus === "achieved" ? now : null
+      })
+      .eq("id", id)
+      .select("id, player_id, text, status, created_at, updated_at, achieved_at")
+      .single();
+
+  if (error) {throw error;}
+  if (!data) {
+    throw new Error("The goal status was updated but no record was returned.");
+  }
+
+  return {
+    id: String(data.id),
+    playerId: String(data.player_id),
+    text: String(data.text),
+    status: data.status === "achieved" ? "achieved" : "in-progress",
+    createdAt: String(data.created_at),
+    updatedAt: String(data.updated_at),
+    achievedAt: data.achieved_at
+      ? String(data.achieved_at): null
+  };
 }
 
-/** Create a new player goal and return the saved database row. */
+/** Create a new goal for a player. */
 export async function createGoal(
-  playerName: string,
+  playerId: string,
   text: string
 ): Promise<Goal> {
   const cleanText = text.trim();
@@ -396,39 +441,41 @@ export async function createGoal(
   }
 
   if (!isSupabaseConfigured()) {
-    return {
-      id: crypto.randomUUID(),
-      playerName,
-      text: cleanText,
-      status: "in-progress",
-    };
+    throw new Error("Supabase is not configured.");
   }
 
   const { data, error } = await supabase!
     .from("goals")
     .insert({
-      player_name: playerName,
+      player_id: playerId,
       text: cleanText,
       status: "in-progress",
     })
-    .select("id, player_name, text, status")
+    .select(
+      "id, player_id, text, status, created_at, updated_at, achieved_at"
+    )
     .single();
 
   if (error) {
-    throw error;
+    throw Error;
   }
 
   if (!data) {
-    throw new Error("The goal was saved but no record was returned.");
+    throw new Error("The goal was saved but no record was returned");
   }
 
   return {
     id: String(data.id),
-    playerName: String(data.player_name),
+    playerId: String(data.player_id),
     text: String(data.text),
     status:
       String(data.status) === "achieved"
         ? "achieved"
         : "in-progress",
+    createdAt: String(data.created_at),
+    updatedAt: String(data.updated_at),
+    achievedAt: data.achieved_at
+      ? String(data.achieved_at)
+      : undefined
   };
 }

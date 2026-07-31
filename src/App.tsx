@@ -121,11 +121,11 @@ export default function App() {
   }
 
   async function addGoal(
-    playerName: string,
+    playerId: string,
     goalText: string
   ): Promise<void> {
     try {
-      const savedGoal = await createGoal(playerName, goalText);
+      const savedGoal = await createGoal(playerId, goalText);
 
       setGoals((previousGoals) => [
         ...previousGoals,
@@ -137,20 +137,30 @@ export default function App() {
     }
   }
 
-  function toggleGoal(id: string) {
-    let nextStatus: "achieved" | "in-progress" = "achieved";
-    setGoals((prev) =>
-      prev.map((g) => {
-        if (g.id !== id) return g;
-        nextStatus = g.status === "achieved" ? "in-progress" : "achieved";
-        return { ...g, status: nextStatus };
-      })
-    );
-    // Persist when Supabase is configured (no-op in demo mode).
-    toggleGoalStatus(id, nextStatus).catch((err) =>
-      console.error("Failed to persist goal status:", err)
-    );
+function toggleGoal(id: string) {
+  const currentGoal = goals.find((goal) => goal.id === id);
+
+  if (!currentGoal) {
+    return;
   }
+
+  const nextStatus: "achieved" | "in-progress" =
+    currentGoal.status === "achieved"
+      ? "in-progress"
+      : "achieved";
+
+  toggleGoalStatus(id, nextStatus)
+    .then((updatedGoal) => {
+      setGoals((previousGoals) =>
+        previousGoals.map((goal) =>
+          goal.id === id ? updatedGoal : goal
+        )
+      );
+    })
+    .catch((error) => {
+      console.error("Failed to persist goal status:", error);
+    });
+}
 
   /**
    * Add a coach-entered assessment. Prepending the row means the derived

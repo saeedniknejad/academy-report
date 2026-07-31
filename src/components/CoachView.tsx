@@ -25,7 +25,7 @@ interface CoachViewProps {
   onMonthChange: (m: string) => void;
   publishedNotes: Record<string, ExpandedNote>;
   onPublishNote: (playerName: string, note: ExpandedNote) => void;
-  onAddGoal: (playerName: string, goalText: string) => Promise<void>;
+  onAddGoal: (playerId: string, goalText: string) => Promise<void>;
   onToggleGoal: (id: string) => void;
 }
 
@@ -53,7 +53,7 @@ export default function CoachView({
   const teamRadar = useMemo(() => buildTeamRadar(profiles), [profiles]);
 
   const playerAttendance = attendance.find((a) => a.playerName === selected?.meta.name);
-  const playerGoals = goals.filter((g) => g.playerName === selected?.meta.name);
+  const playerGoals = goals.filter((g) => g.playerId === selected?.meta.id);
 
   const comparisonRadar =
     compareMode && comparePlayer && selected
@@ -216,7 +216,15 @@ export default function CoachView({
           {/* Attendance + goals */}
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
             <AttendancePanel record={playerAttendance} />
-            <GoalsPanel playerName={selected.meta.name} goals={playerGoals} onAdd={onAddGoal} onToggle={onToggleGoal} />
+
+              {selected.meta.id && (
+                <GoalsPanel
+                    playerId={selected.meta.id}
+                    goals={playerGoals}
+                    onAdd={onAddGoal}
+                    onToggle={onToggleGoal}
+                />
+            )}
           </div>
 
           <TimelinePanel profile={selected} />

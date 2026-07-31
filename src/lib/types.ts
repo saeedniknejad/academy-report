@@ -109,9 +109,12 @@ export interface PlayerMeta {
 
 export interface Goal {
   id: string;
-  playerName: string;
+  playerId: string;
   text: string;
   status: "in-progress" | "achieved";
+  createdAt: string;
+  updatedAt: string;
+  achievedAt?: string | null;
 }
 
 export interface AttendanceRecord {

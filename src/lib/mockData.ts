@@ -7,7 +7,6 @@
 import type {
   Assessment,
   AttendanceRecord,
-  Goal,
   PlayerMeta,
   Position,
   SessionType,
@@ -148,16 +147,4 @@ export const MOCK_ATTENDANCE: AttendanceRecord[] = [
   { playerName: "Milo S.", attended: 14, total: 16 },
   { playerName: "Elias P.", attended: 16, total: 16 },
   { playerName: "Yusuf K.", attended: 12, total: 16 },
-];
-
-export const MOCK_GOALS: Goal[] = [
-  { id: "g1", playerName: "Kian R.", text: "Score with weaker foot in a match", status: "in-progress" },
-  { id: "g2", playerName: "Kian R.", text: "Complete 3 successful crosses per game", status: "achieved" },
-  { id: "g3", playerName: "Arman T.", text: "Lead the warm-up as rotating captain", status: "achieved" },
-  { id: "g4", playerName: "Arman T.", text: "Add a long-range shooting threat", status: "in-progress" },
-  { id: "g5", playerName: "Dario N.", text: "Play out from the back under pressure", status: "in-progress" },
-  { id: "g6", playerName: "Milo S.", text: "Win 5 hold-up duels per match", status: "in-progress" },
-  { id: "g7", playerName: "Milo S.", text: "Score in three consecutive sessions", status: "achieved" },
-  { id: "g8", playerName: "Elias P.", text: "Deliver an assist from an overlap", status: "achieved" },
-  { id: "g9", playerName: "Yusuf K.", text: "Make the right final-third decision", status: "in-progress" },
 ];
