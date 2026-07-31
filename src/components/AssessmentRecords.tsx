@@ -23,7 +23,21 @@ export default function AssessmentRecords({
   const filteredAssessments = useMemo(() => {
       const normalizedSearch = searchText.trim().toLowerCase();
 
-      return [...assessments]
+      const uniqueAssessments = Array.from(
+        new Map(
+          assessments.map((assessment) => {
+            const assessmentDate = assessment.timestamp.slice(0, 10);
+
+            const identity =
+              assessment.id ??
+              `${assessment.playerId}-${assessmentDate}-${assessment.sessionType}`;
+
+            return [identity, assessment];
+          })
+        ).values()
+      );
+
+      return uniqueAssessments
         .filter((assessment) => {
           if (!normalizedSearch) {
             return true;

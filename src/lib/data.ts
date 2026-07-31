@@ -81,7 +81,7 @@ function dbRowToAssessment(row: Record<string, unknown>): Assessment {
     id: row.id ? String(row.id) : undefined,
     createdAt: row.created_at ? String(row.created_at) : undefined,
     updatedAt: row.updated_at ? String(row.updated_at) : undefined,
-    timestamp: String(row.created_at ?? `${row.date}T00:00:00.000Z`),
+    timestamp: `${String(row.date)}T12:00:00`,
     playerId:row.player_id ? String(row.player_id): undefined,
     playerName: String(row.player_name),
     date: String(row.date),
