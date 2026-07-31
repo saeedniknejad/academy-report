@@ -129,10 +129,16 @@ export default function AssessmentForm({ roster, onSubmit, onClose }: Assessment
       // On success the parent closes the modal; nothing more to do here.
     } catch (err) {
       console.error("Assessment save failed:", err);
-      setError(
-          err instanceof Error
-            ? err.message
-              : "The assessment could not be saved.");
+      const message =
+        err instanceof Error
+          ? err.message
+          : typeof err === "object" &&
+              err !== null &&
+              "message" in err
+            ? String(err.message)
+            : "Unknown database error.";
+
+        setError(`The assessment could not be saved: ${message}`);
       setSubmitting(false);
     }
   }
