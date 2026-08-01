@@ -30,7 +30,7 @@ export default function ProgressChart({
      style={{ border: "1px solid #3A5275"}}>
       <ResponsiveContainer width="100%" height={height}>
       <BarChart data={chartData} margin={{ top: 8, right: 8, left: 18, bottom: 28 }}>
-        <CartesianGrid strokeDasharray="4 4" stroke="#4A658A" vertical={false}
+        <CartesianGrid strokeDasharray="4 4" stroke="#566F93" strokeWidth={1.1} vertical={false}
                        horizontalCoordinatesGenerator={({ yAxis}) =>
                         yAxis.ticks?.map((tick: { coordinate: number }) =>tick.coordinate) ?? []}
         />
@@ -41,7 +41,7 @@ export default function ProgressChart({
             fontSize: 11,
             fontFamily: "IBM Plex Mono",
           }}
-          axisLine={false}
+          axisLine={true}
           tickLine={false}
           label={{
             value: "Month",
