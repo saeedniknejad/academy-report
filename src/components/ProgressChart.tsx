@@ -30,7 +30,7 @@ export default function ProgressChart({
      style={{ border: "1px solid #3A5275"}}>
       <ResponsiveContainer width="100%" height={height}>
       <BarChart data={chartData} margin={{ top: 8, right: 8, left: 18, bottom: 28 }}>
-        <CartesianGrid strokeDasharray="4 4" stroke="#566F93" strokeWidth={1.1} vertical={false}
+        <CartesianGrid strokeDasharray="4 4" stroke="#566F93" strokeWidth={1} vertical={false}
         />
         <XAxis
           xAxisId={"bottom"}
@@ -40,7 +40,7 @@ export default function ProgressChart({
             fontSize: 11,
             fontFamily: "IBM Plex Mono",
           }}
-          axisLine={true}
+          axisLine={{ stroke: "#566F93", strokeWidth: 1.3 }}
           tickLine={false}
           label={{
             value: "Month",
@@ -57,7 +57,7 @@ export default function ProgressChart({
           dataKey="month"
           tick={false}
           tickLine={false}
-          axisLine={{ stroke: "#566F93", strokeWidth: 1.2 }}
+          axisLine={{ stroke: "#566F93", strokeWidth: 1.3 }}
           height={1}
         />
         <YAxis
@@ -65,7 +65,7 @@ export default function ProgressChart({
           domain={[1, 5]}
           ticks={[1, 2, 3, 4, 5]}
           allowDecimals={false}
-          axisLine={true}
+          axisLine={{ stroke: "#566F93", strokeWidth: 1.3 }}
           tickLine={true}
           width={42}
           tick={{
@@ -89,7 +89,7 @@ export default function ProgressChart({
           domain={[1, 5]}
           tick={false}
           tickLine={false}
-          axisLine={{ stroke: "#566F93", strokeWidth: 1.2 }}
+          axisLine={{ stroke: "#566F93", strokeWidth: 1.3 }}
           width={1}
         />
         <Tooltip
