@@ -39,6 +39,16 @@ export default function RadarChart({
   height = 260,
   showLegend = false,
 }: RadarChartProps) {
+  const chartData = data.map((point) => ({
+    ...point,
+    value: point.value > 5 ? point.value / 20 : point.value,
+    season:
+      point.season !== undefined
+        ? point.season > 5
+          ? point.season / 20
+          : point.season
+        : undefined,
+  }));
   const series: Series[] = [{ key: "value", name: primaryName, color }];
   if (overlay) series.push({ key: "season", name: overlay.name, color: overlay.color });
 
@@ -51,13 +61,25 @@ export default function RadarChart({
       </div>
 
       <ResponsiveContainer width="100%" height={height}>
-        <ReRadarChart data={data} outerRadius="72%">
+        <ReRadarChart data={chartData} outerRadius="72%">
           <PolarGrid stroke="#2A3E5C" />
           <PolarAngleAxis
             dataKey="skill"
             tick={{ fill: "#B9C6BE", fontSize: 11, fontFamily: "Inter" }}
           />
-          <PolarRadiusAxis tick={false} axisLine={false} domain={[0, 100]} />
+          <PolarRadiusAxis
+            angle={90}
+            domain={[0, 5]}
+            tickCount={6}
+            allowDecimals={false}
+            tickFormatter={(value) => (value === 0 ? "" : String(value))}
+            tick={{
+              fill: "#B9C6BE",
+              fontSize: 10,
+              fontFamily: "IBM Plex Mono",
+            }}
+            axisLine={false}
+          />
           {series.map((s) => (
             <Radar
               key={s.key}
