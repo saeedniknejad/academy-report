@@ -30,11 +30,9 @@ export default function ProgressChart({
      style={{ border: "1px solid #3A5275"}}>
       <ResponsiveContainer width="100%" height={height}>
       <BarChart data={chartData} margin={{ top: 8, right: 8, left: 18, bottom: 28 }}>
-        <CartesianGrid strokeDasharray="4 4" stroke="#566F93" strokeWidth={1.1} vertical={false}
-                       horizontalCoordinatesGenerator={({ yAxis}) =>
-                        yAxis.ticks?.map((tick: { coordinate: number }) =>tick.coordinate) ?? []}
-        />
+        <CartesianGrid strokeDasharray="4 4" stroke="#566F93" strokeWidth={1.1} vertical={false}/>
         <XAxis
+          xAxisId={"bottom"}
           dataKey="month"
           tick={{
             fill: "#8FA396",
@@ -52,7 +50,17 @@ export default function ProgressChart({
             fontFamily: "IBM Plex Mono",
           }}
         />
+        <XAxis
+          xAxisId="top"
+          orientation="top"
+          dataKey="month"
+          tick={false}
+          tickLine={false}
+          axisLine={{ stroke: "#566F93", strokeWidth: 1.2 }}
+          height={1}
+        />
         <YAxis
+          yAxisId={"left"}
           domain={[1, 5]}
           ticks={[1, 2, 3, 4, 5]}
           allowDecimals={false}
@@ -74,6 +82,15 @@ export default function ProgressChart({
             fontFamily: "IBM Plex Mono",
           }}
         />
+        <YAxis
+          yAxisId="right"
+          orientation="right"
+          domain={[1, 5]}
+          tick={false}
+          tickLine={false}
+          axisLine={{ stroke: "#566F93", strokeWidth: 1.2 }}
+          width={1}
+        />
         <Tooltip
           cursor={{ fill: "#1C2E4A" }}
           contentStyle={{
@@ -87,7 +104,7 @@ export default function ProgressChart({
           labelStyle={{ color: "#8FA396" }}
           formatter={(v: number) => [`${Number(v).toFixed(1)}/5`, "Overall"]}
         />
-        <Bar dataKey="value" fill={color} radius={[4, 4, 0, 0]} maxBarSize={44} />
+        <Bar xAxisId="bottom" yAxisId="left" dataKey="value" fill={color} radius={[4, 4, 0, 0]} maxBarSize={44} />
       </BarChart>
     </ResponsiveContainer>
    </div>
