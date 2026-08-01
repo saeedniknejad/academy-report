@@ -62,7 +62,10 @@ export default function RadarChart({
 
       <ResponsiveContainer width="100%" height={height}>
         <ReRadarChart data={chartData} outerRadius="72%">
-          <PolarGrid stroke="#2A3E5C" />
+          <PolarGrid
+              gridType={"circle"}
+              stroke="#2A3E5C"
+          />
           <PolarAngleAxis
             dataKey="skill"
             tick={{ fill: "#B9C6BE", fontSize: 11, fontFamily: "Inter" }}
