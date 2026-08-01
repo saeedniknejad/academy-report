@@ -30,7 +30,7 @@ export default function ProgressChart({
      style={{ border: "1px solid #3A5275"}}>
       <ResponsiveContainer width="100%" height={height}>
       <BarChart data={chartData} margin={{ top: 8, right: 8, left: 18, bottom: 28 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#2A3E5C" vertical={false}
+        <CartesianGrid strokeDasharray="3 3" stroke="#4A658A" vertical={false}
                        horizontalCoordinatesGenerator={({ yAxis}) =>
                         yAxis.ticks?.map((tick: { coordinate: number }) =>tick.coordinate) ?? []}
         />
