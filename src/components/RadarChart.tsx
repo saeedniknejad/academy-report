@@ -54,12 +54,6 @@ export default function RadarChart({
 
   return (
     <div className="relative">
-      {/* Pitch centre-circle backdrop */}
-      <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-[0.15]">
-        <div className="h-40 w-40 rounded-full border border-text-primary" />
-        <div className="absolute h-1 w-1 rounded-full bg-text-primary" />
-      </div>
-
       <ResponsiveContainer width="100%" height={height}>
         <ReRadarChart data={chartData} outerRadius="72%">
           <PolarGrid
