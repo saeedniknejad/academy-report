@@ -40,7 +40,7 @@ export default function ProgressChart({
             fontSize: 11,
             fontFamily: "IBM Plex Mono",
           }}
-          axisLine={{ stroke: "#566F93", strokeWidth: 1.3 }}
+          axisLine={{ stroke: "#566F93", strokeWidth: 1.4 }}
           tickLine={false}
           label={{
             value: "Month",
@@ -57,7 +57,7 @@ export default function ProgressChart({
           dataKey="month"
           tick={false}
           tickLine={false}
-          axisLine={{ stroke: "#566F93", strokeWidth: 1.3 }}
+          axisLine={{ stroke: "#566F93", strokeWidth: 1.4 }}
           height={1}
         />
         <YAxis
@@ -65,7 +65,7 @@ export default function ProgressChart({
           domain={[1, 5]}
           ticks={[1, 2, 3, 4, 5]}
           allowDecimals={false}
-          axisLine={{ stroke: "#566F93", strokeWidth: 1.3 }}
+          axisLine={{ stroke: "#566F93", strokeWidth: 1.4 }}
           tickLine={true}
           width={42}
           tick={{
@@ -89,7 +89,7 @@ export default function ProgressChart({
           domain={[1, 5]}
           tick={false}
           tickLine={false}
-          axisLine={{ stroke: "#566F93", strokeWidth: 1.3 }}
+          axisLine={{ stroke: "#566F93", strokeWidth: 1.4 }}
           width={1}
         />
         <Tooltip
