@@ -16,6 +16,7 @@ export default function AssessmentRecords({
   onSelect,
 }: AssessmentRecordsProps) {
     const [searchText, setSearchText] = useState("");
+    const [sessionFilter, setSessionFilter] = useState("All");
     const playerNameById = new Map(
     roster
       .filter((player) => player.id)
@@ -41,24 +42,28 @@ export default function AssessmentRecords({
 
       return uniqueAssessments
         .filter((assessment) => {
-          if (!normalizedSearch) {
-            return true;
-          }
-
           const playerName = assessment.playerId
             ? playerNameById.get(assessment.playerId)
             : assessment.playerName;
 
-          return (playerName ?? "")
-            .toLowerCase()
-            .includes(normalizedSearch);
+          const matchesSearch =
+            !normalizedSearch ||
+            (playerName ?? "")
+              .toLowerCase()
+              .includes(normalizedSearch);
+
+          const matchesSession =
+            sessionFilter === "All" ||
+            assessment.sessionType === sessionFilter;
+
+          return matchesSearch && matchesSession;
         })
         .sort(
           (a, b) =>
             new Date(b.timestamp).getTime() -
             new Date(a.timestamp).getTime()
         );
-    }, [assessments, playerNameById, searchText]);
+    }, [assessments, playerNameById, searchText, sessionFilter]);
 
   return (
     <div
@@ -98,13 +103,26 @@ export default function AssessmentRecords({
         </div>
 
         <div className="max-h-[70vh] overflow-y-auto p-5">
-        <input
-          type="search"
-          value={searchText}
-          onChange={(event) => setSearchText(event.target.value)}
-          placeholder="Search player..."
-          className="mb-4 w-full rounded-md border border-border bg-bg-primary px-3 py-2 text-sm text-text-primary outline-none transition-colors placeholder:text-text-muted focus:border-border-hover"
-        />
+        <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <input
+            type="search"
+            value={searchText}
+            onChange={(event) => setSearchText(event.target.value)}
+            placeholder="Search player..."
+            className="w-full rounded-md border border-border bg-bg-primary px-3 py-2 text-sm text-text-primary outline-none transition-colors placeholder:text-text-muted focus:border-border-hover"
+          />
+
+          <select
+            value={sessionFilter}
+            onChange={(event) => setSessionFilter(event.target.value)}
+            className="w-full rounded-md border border-border bg-bg-primary px-3 py-2 text-sm text-text-primary outline-none transition-colors focus:border-border-hover"
+          >
+            <option value="All">All session types</option>
+            <option value="Training">Training</option>
+            <option value="Match">Match</option>
+            <option value="Tournament">Tournament</option>
+          </select>
+        </div>
           {filteredAssessments.length === 0 ? (
             <p className="rounded-md border border-border bg-bg-primary px-4 py-6 text-center text-sm text-text-muted">
               No assessment records found.
