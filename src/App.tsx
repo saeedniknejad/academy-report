@@ -37,6 +37,7 @@ export default function App() {
   const [publishedNotes, setPublishedNotes] = useState<Record<string, ExpandedNote>>({});
   const [activeMonth, setActiveMonth] = useState("Current");
   const [formOpen, setFormOpen] = useState(false);
+  const [selectedAssessment, setSelectedAssessment] = useState<Assessment | null>(null);
   const [recordsOpen, setRecordsOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null> (null);
   const [assessmentMenuOpen, setAssessmentMenuOpen] = useState(false);
@@ -340,13 +341,26 @@ function toggleGoal(id: string) {
       {formOpen && (
         <AssessmentForm
           roster={roster}
+          initialAssessment={selectedAssessment}
           onSubmit={addAssessment}
-          onClose={() => setFormOpen(false)}
+          onClose={() => {
+            setFormOpen(false);
+            setSelectedAssessment(null);
+          }}
         />
       )}
 
       {recordsOpen && (
-          <AssessmentRecords assessments={assessments} roster={roster} onClose={() => setRecordsOpen(false)} />
+          <AssessmentRecords
+              assessments={assessments}
+              roster={roster}
+              onClose={() => setRecordsOpen(false)}
+              onSelect={(assessment) => {
+                setSelectedAssessment(assessment);
+                setRecordsOpen(false);
+                setFormOpen(true);
+              }}
+          />
       )}
 
       {successMessage && (

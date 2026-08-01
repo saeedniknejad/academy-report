@@ -16,6 +16,7 @@ import { getAssessmentByIdentity} from "../lib/data";
 
 interface AssessmentFormProps {
   roster: PlayerMeta[];
+  initialAssessment?: Assessment | null;
   /**
    * Persist the new assessment (and, if provided, register a brand-new player).
    * May be async and may throw — the form shows the error and lets the coach
@@ -40,7 +41,7 @@ function todayISO(): string {
  * ratings, plus highlight / area-to-develop / internal (coach-only) notes.
  * Submitting feeds the charts live — no second app or page.
  */
-export default function AssessmentForm({ roster, onSubmit, onClose }: AssessmentFormProps) {
+export default function AssessmentForm({ roster, initialAssessment, onSubmit, onClose }: AssessmentFormProps) {
   const [playerSelect, setPlayerSelect] = useState(roster[0]?.id ?? ADD_NEW);
   const [newName, setNewName] = useState("");
   const [newNumber, setNewNumber] = useState("");
@@ -72,14 +73,29 @@ export default function AssessmentForm({ roster, onSubmit, onClose }: Assessment
 
   const selectedPlayerName = roster.find((player) => player.id === playerSelect)?.name ?? "";
 
+  //NEW useEffect (add this)
   useEffect(() => {
-  if (isNewPlayer || !playerSelect || !date) {
-    setExistingAssessment(null);
-    setCheckingExisting(false);
-    return;
-  }
+    if (!initialAssessment) {
+      return;
+    }
 
-  let cancelled = false;
+    if (initialAssessment.playerId) {
+      setPlayerSelect(initialAssessment.playerId);
+    }
+
+    setDate(initialAssessment.timestamp.slice(0, 10));
+    setSessionType(initialAssessment.sessionType);
+    setExistingAssessment(initialAssessment);
+  }, [initialAssessment]);
+
+  useEffect(() => {
+    if (isNewPlayer || !playerSelect || !date) {
+      setExistingAssessment(null);
+      setCheckingExisting(false);
+      return;
+    }
+
+    let cancelled = false;
 
   async function checkExistingAssessment() {
     setCheckingExisting(true);

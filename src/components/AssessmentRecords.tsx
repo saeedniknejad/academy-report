@@ -6,12 +6,14 @@ type AssessmentRecordsProps = {
   assessments: Assessment[];
   roster: PlayerMeta[];
   onClose: () => void;
+  onSelect?: (assessment: Assessment) => void;
 };
 
 export default function AssessmentRecords({
   assessments,
   roster,
   onClose,
+  onSelect,
 }: AssessmentRecordsProps) {
     const [searchText, setSearchText] = useState("");
     const playerNameById = new Map(
@@ -120,28 +122,42 @@ export default function AssessmentRecords({
 
                 return (
                   <li
-                    key={
-                      assessment.id ??
-                      `${assessment.playerId}-${assessmentDate}-${assessment.sessionType}-${index}`
-                    }
-                    className="rounded-md border border-border bg-bg-primary px-4 py-3"
+                      key={
+                        assessment.id ??
+                        `${assessment.playerId}-${assessmentDate}-${assessment.sessionType}-${index}`
+                      }
                   >
-                    <p className="text-sm font-medium text-text-primary">
-                      {playerName || "Unknown player"}
-                    </p>
+                      <button
+                        type="button"
+                        onClick={() => onSelect?.(assessment)}
+                        className="flex w-full items-center justify-between rounded-md border border-border bg-bg-primary px-4 py-3 text-left transition-colors hover:border-border-hover hover:bg-bg-card-hover"
+                      >
+                        <div>
+                          <p className="text-sm font-medium text-text-primary">
+                            {playerName || "Unknown player"}
+                          </p>
 
-                    <p className="mt-1 font-mono text-[11px] text-text-muted">
-                      {new Date(
-                        `${assessmentDate}T12:00:00`
-                      ).toLocaleDateString(undefined, {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
-                      {" · "}
-                      {assessment.sessionType}
-                    </p>
-                  </li>
+                          <p className="mt-1 font-mono text-[11px] text-text-muted">
+                            {new Date(
+                              `${assessmentDate}T12:00:00`
+                            ).toLocaleDateString(undefined, {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })}
+                            {" · "}
+                            {assessment.sessionType}
+                          </p>
+                        </div>
+
+                        <span
+                          aria-hidden="true"
+                          className="ml-4 text-lg text-text-muted"
+                        >
+                          ›
+                        </span>
+                      </button>
+                    </li>
                 );
               })}
             </ul>
