@@ -26,7 +26,8 @@ export default function ProgressChart({
       value: point.value > 5 ? point.value / 20 : point.value,
   }));
   return (
-     <div className="rounded-xl border-border p-3">
+     <div className="rounded-xl p-3"
+     style={{ border: "1px solid #3A5275"}}>
       <ResponsiveContainer width="100%" height={height}>
       <BarChart data={chartData} margin={{ top: 8, right: 8, left: 18, bottom: 28 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#2A3E5C" vertical={false} />

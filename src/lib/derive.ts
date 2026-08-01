@@ -27,9 +27,12 @@ export function toDisplayScale(score: number): number {
 const MONTH_LABEL = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 function monthKey(iso: string): string {
-  // Group by calendar month; label is short month name.
-  const d = new Date(iso);
-  return MONTH_LABEL[d.getMonth()];
+  const d = new Date(`${iso.slice(0, 10)}T12:00:00`);
+
+  const month = MONTH_LABEL[d.getMonth()];
+  const year = String(d.getFullYear()).slice(-2);
+
+  return `${month} '${year}`;
 }
 
 function averageScores(rows: Assessment[]): Record<SkillKey, number> {

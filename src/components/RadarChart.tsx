@@ -53,7 +53,8 @@ export default function RadarChart({
   if (overlay) series.push({ key: "season", name: overlay.name, color: overlay.color });
 
   return (
-    <div className="relative rounded-xl border-border p-3">
+    <div className="relative rounded-xl p-3"
+    style={{ border: "1px solid #3A5275"}}>
       <ResponsiveContainer width="100%" height={height}>
         <ReRadarChart data={chartData} outerRadius="72%">
           <PolarGrid
