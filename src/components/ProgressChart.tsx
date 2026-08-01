@@ -26,7 +26,8 @@ export default function ProgressChart({
       value: point.value > 5 ? point.value / 20 : point.value,
   }));
   return (
-    <ResponsiveContainer width="100%" height={height}>
+     <div className="rounded-xl border-border p-3">
+      <ResponsiveContainer width="100%" height={height}>
       <BarChart data={chartData} margin={{ top: 8, right: 8, left: 18, bottom: 28 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#2A3E5C" vertical={false} />
         <XAxis
@@ -85,5 +86,6 @@ export default function ProgressChart({
         <Bar dataKey="value" fill={color} radius={[4, 4, 0, 0]} maxBarSize={44} />
       </BarChart>
     </ResponsiveContainer>
+   </div>
   );
 }
