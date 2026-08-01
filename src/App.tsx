@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Shield, Loader2, Plus, LogOut } from "lucide-react";
 import CoachView from "./components/CoachView";
 import AssessmentForm from "./components/AssessmentForm";
@@ -41,6 +41,7 @@ export default function App() {
   const [recordsOpen, setRecordsOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null> (null);
   const [assessmentMenuOpen, setAssessmentMenuOpen] = useState(false);
+  const assessmentMenuRef = useRef<HTMLDivElement>(null);
 
   // ---- Auth (only enforced when VITE_REQUIRE_AUTH=true + Supabase set) ----
   const [authed, setAuthed] = useState(!authRequired());
@@ -109,6 +110,23 @@ export default function App() {
       cancelled = true;
     };
   }, [authChecked, authed]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        assessmentMenuRef.current &&
+        !assessmentMenuRef.current.contains(event.target as Node)
+      ) {
+        setAssessmentMenuOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     if (!successMessage) {
@@ -257,7 +275,7 @@ function toggleGoal(id: string) {
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="relative">
+          <div ref={assessmentMenuRef} className="relative">
             <button
               type="button"
               onClick={() => setAssessmentMenuOpen((open) => !open)}
