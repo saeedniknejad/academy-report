@@ -31,10 +31,6 @@ export default function ProgressChart({
       <ResponsiveContainer width="100%" height={height}>
       <BarChart data={chartData} margin={{ top: 8, right: 8, left: 18, bottom: 28 }}>
         <CartesianGrid strokeDasharray="4 4" stroke="#566F93" strokeWidth={1.1} vertical={false}
-                       horizontalCoordinatesGenerator={({ yAxis }) =>
-                           (yAxis?.ticks ?? [])
-                               .slice(1, -1)
-                               . map((tick: { coordinate: number }) => tick.coordinate)}
         />
         <XAxis
           xAxisId={"bottom"}
