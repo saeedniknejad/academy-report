@@ -181,12 +181,12 @@ export default function CoachView({
                   showLegend
                 />
               ) : (
-                <RadarChart data={selected.currentRadar} color="#F2A93B" />
+                <RadarChart data={selected.currentRadar} color="#F2A93B" height={220}/>
               )}
 
               <div className="flex flex-col justify-center">
                 <SectionLabel>Progress trend</SectionLabel>
-                <ProgressChart data={selected.monthlyProgress} />
+                <ProgressChart data={selected.monthlyProgress} height={220}/>
                 {selected.droppedSkills.length > 0 && (
                   <p className="mt-2 font-mono text-[10px] leading-relaxed text-[#E58F86]">
                     ↓ dropped this month:{" "}
