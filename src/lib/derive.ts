@@ -32,7 +32,7 @@ function monthKey(iso: string): string {
   const month = MONTH_LABEL[d.getMonth()];
   const year = String(d.getFullYear()).slice(-2);
 
-  return `${month} '${year}`;
+  return `${month}${year}`;
 }
 
 function averageScores(rows: Assessment[]): Record<SkillKey, number> {
