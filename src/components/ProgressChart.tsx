@@ -19,7 +19,7 @@ interface ProgressChartProps {
 export default function ProgressChart({
   data,
   height = 140,
-  color = "#4DA3FF",
+  color = "#F2A93B",
 }: ProgressChartProps) {
   const chartData = data.map((point) => ({
       ...point,
