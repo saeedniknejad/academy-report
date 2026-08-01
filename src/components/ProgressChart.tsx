@@ -29,7 +29,7 @@ export default function ProgressChart({
      <div className="rounded-xl p-3"
      style={{ border: "1px solid #3A5275"}}>
       <ResponsiveContainer width="100%" height={height}>
-      <BarChart data={chartData} margin={{ top: 8, right: 8, left: 18, bottom: 28 }}>
+      <BarChart data={chartData} margin={{ top: 8, right: 0, left: 0, bottom: 28 }}>
         <CartesianGrid strokeDasharray="4 4" stroke="#566F93" strokeWidth={1} vertical={false}
         />
         <XAxis
