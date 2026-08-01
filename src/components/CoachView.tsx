@@ -152,7 +152,14 @@ export default function CoachView({
               </div>
               <span className="font-mono text-[11px] text-text-muted">avg across squad</span>
             </div>
-            <RadarChart data={teamRadar} color="#4DA3FF" />
+            <div className="mt-3">
+              <SectionLabel>Team Skill Profile</SectionLabel>
+
+              <RadarChart
+                data={teamRadar}
+                color="#4DA3FF"
+              />
+            </div>
           </Card>
 
           {/* Individual / comparison profile */}
@@ -172,21 +179,38 @@ export default function CoachView({
             </div>
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              {comparisonRadar ? (
-                <RadarChart
-                  data={comparisonRadar}
-                  color="#F2A93B"
-                  primaryName={selected.meta.name}
-                  overlay={{ name: `vs ${comparePlayer!.meta.name}`, color: "#4DA3FF" }}
-                  showLegend
-                />
-              ) : (
-                <RadarChart data={selected.currentRadar} color="#F2A93B" height={220}/>
-              )}
+              <div className="flex flex-col">
+                <SectionLabel>
+                  {comparisonRadar ? "Player comparison" : "Skill Profile"}
+                </SectionLabel>
 
-              <div className="flex flex-col justify-center">
-                <SectionLabel>Progress trend</SectionLabel>
-                <ProgressChart data={selected.monthlyProgress} height={220}/>
+                {comparisonRadar ? (
+                  <RadarChart
+                    data={comparisonRadar}
+                    color="#F2A93B"
+                    primaryName={selected.meta.name}
+                    overlay={{
+                      name: `vs ${comparePlayer!.meta.name}`,
+                      color: "#4DA3FF",
+                    }}
+                    showLegend
+                    height={220}
+                  />
+                ) : (
+                  <RadarChart
+                    data={selected.currentRadar}
+                    color="#F2A93B"
+                    height={220}
+                  />
+                )}
+              </div>
+
+              <div className="flex flex-col">
+                <SectionLabel>Progress Trend</SectionLabel>
+                <ProgressChart
+                  data={selected.monthlyProgress}
+                  height={220}
+                />
                 {selected.droppedSkills.length > 0 && (
                   <p className="mt-2 font-mono text-[10px] leading-relaxed text-[#E58F86]">
                     ↓ dropped this month:{" "}
