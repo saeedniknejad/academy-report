@@ -16,7 +16,7 @@ export default function PlayerCard({ profile, active, onClick, compareActive }: 
     <button
       onClick={onClick}
       aria-pressed={active}
-      className={`flex h-[20px] w-full items-center gap-2 rounded-lg border px-2.5 py-1.5 text-left transition-colors ${
+      className={`flex h-[58px] w-full items-center gap-2 rounded-lg border px-2.5 py-1.5 text-left transition-colors ${
         active
           ? "border-accent-gold bg-bg-card-hover"
           : compareActive
