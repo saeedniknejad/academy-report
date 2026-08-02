@@ -21,10 +21,23 @@ export default function ProgressChart({
   height = 140,
   color = "#F2A93B",
 }: ProgressChartProps) {
-  const chartData = data.map((point) => ({
+  const normalizedData = data.map((point) => ({
       ...point,
       value: point.value > 5 ? point.value / 20 : point.value,
-  }));
+    }));
+
+    const minimumSlots = 6;
+
+    const chartData = [
+      ...normalizedData,
+      ...Array.from(
+        { length: Math.max(0, minimumSlots - normalizedData.length) },
+        (_, index) => ({
+          month: `empty-${index}`,
+          value: null,
+        })
+      ),
+    ];
   return (
      <div className="rounded-xl p-3"
      style={{ border: "1px solid #3A5275"}}>
@@ -35,6 +48,7 @@ export default function ProgressChart({
         <XAxis
           xAxisId={"bottom"}
           dataKey="month"
+          tickFormatter={(value) => String(value).startsWith("empty-") ? "" : String(value)}
           tick={{
             fill: "#8FA396",
             fontSize: 11,
