@@ -16,7 +16,7 @@ export default function PlayerCard({ profile, active, onClick, compareActive }: 
     <button
       onClick={onClick}
       aria-pressed={active}
-      className={`flex min-h-[10px] w-full items-center gap-2.5 rounded-lg border p-2.5 text-left transition-colors ${
+      className={`flex h-[20px] w-full items-center gap-2 rounded-lg border px-2.5 py-1.5 text-left transition-colors ${
         active
           ? "border-accent-gold bg-bg-card-hover"
           : compareActive
@@ -24,7 +24,7 @@ export default function PlayerCard({ profile, active, onClick, compareActive }: 
             : "border-border bg-bg-card hover:border-border-hover"
       }`}
     >
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-border bg-bg-primary font-heading text-lg font-semibold text-accent-gold">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border bg-bg-primary font-heading text-sm font-semibold text-accent-gold">
         {meta.number}
       </div>
       <div className="min-w-0 flex-1">
