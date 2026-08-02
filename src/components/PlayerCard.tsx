@@ -24,7 +24,7 @@ export default function PlayerCard({ profile, active, onClick, compareActive }: 
             : "border-border bg-bg-card hover:border-border-hover"
       }`}
     >
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-border bg-bg-primary font-heading text-sm font-semibold text-accent-gold">
+      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-bg-primary font-heading text-sm font-semibold text-accent-gold">
         {meta.number}
       </div>
       <div className="min-w-0 flex-1">

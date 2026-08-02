@@ -32,7 +32,7 @@ export default function SquadList({
     <div className="flex flex-col gap-2">
       <div className="mb-1 flex items-center justify-between">
         <div className="font-mono text-[11px] uppercase tracking-wider text-text-muted">
-          U12 Squad · {profiles.length} players
+          U11 Squad · {profiles.length} players
           {flaggedCount > 0 && <span className="text-[#E58F86]"> · {flaggedCount} flagged</span>}
         </div>
         {onToggleCompareMode && (
@@ -56,7 +56,7 @@ export default function SquadList({
           const isPrimary = p.meta.name === selectedName;
           const isCompare = compareMode && p.meta.name === compareName;
           return (
-            <div key={p.meta.number} className="min-w-[220px] md:min-w-0">
+            <div key={p.meta.number} className="w-[150px] shrink-0 md:w-auto md:min-w-0">
               <PlayerCard
                 profile={p}
                 active={isPrimary}
