@@ -29,7 +29,7 @@ export default function AssessmentRecords({
       const uniqueAssessments = Array.from(
         new Map(
           assessments.map((assessment) => {
-            const assessmentDate = assessment.timestamp.slice(0, 10);
+            const assessmentDate = assessment.date;
 
             const identity =
               assessment.id ??
@@ -60,8 +60,8 @@ export default function AssessmentRecords({
         })
         .sort(
           (a, b) =>
-            new Date(b.timestamp).getTime() -
-            new Date(a.timestamp).getTime()
+            new Date(`${b.date}T12:00:00`).getTime() -
+            new Date(`${a.date}T12:00:00`).getTime()
         );
     }, [assessments, playerNameById, searchText, sessionFilter]);
 
@@ -135,8 +135,7 @@ export default function AssessmentRecords({
                     ? playerNameById.get(assessment.playerId)
                     : assessment.playerName;
 
-                const assessmentDate =
-                  assessment.timestamp.slice(0, 10);
+                const assessmentDate = assessment.date;
 
                 return (
                   <li

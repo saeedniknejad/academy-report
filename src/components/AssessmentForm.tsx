@@ -83,7 +83,7 @@ export default function AssessmentForm({ roster, initialAssessment, onSubmit, on
       setPlayerSelect(initialAssessment.playerId);
     }
 
-    setDate(initialAssessment.timestamp.slice(0, 10));
+    setDate(initialAssessment.date);
     setSessionType(initialAssessment.sessionType);
     setExistingAssessment(initialAssessment);
   }, [initialAssessment]);
