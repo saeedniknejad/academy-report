@@ -60,7 +60,7 @@ export function Badge({
 
 /** Coloured trend arrow. */
 export function TrendArrow({ trend, size = 14 }: { trend: TrendDirection; size?: number }) {
-  const color = trend === "up" ? "#4DA3FF" : trend === "down" ? "#D65A4E" : "#B9C6BE";
+  const color = trend === "up" ? "#4CAF50" : trend === "down" ? "#D65A4E" : "#B9C6BE";
   if (trend === "flat") return <Minus size={size} style={{ color }} />;
   return (
     <TrendingUp
