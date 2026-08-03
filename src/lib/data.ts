@@ -390,41 +390,82 @@ export async function saveAssessment(
   }
 
   if (newPlayer) {
-    const { data: createdPlayer, error: playerError } = await supabase!
+    const { data: existingPlayer, error: lookupError } = await supabase!
       .from("players")
-      .insert({
-        player_name: newPlayer.name,
-        number: newPlayer.number,
-        primary_position: newPlayer.primaryPosition,
-        age_group: newPlayer.ageGroup,
-      })
-      .select("id")
-      .single();
+      .select("id, is_active")
+      .eq("number", newPlayer.number)
+      .maybeSingle();
 
-    if (playerError) {
-      throw playerError;
+    if (lookupError) {
+      throw lookupError;
     }
 
-    if (!createdPlayer?.id) {
-      throw new Error(
-        "The new player was created without a player ID."
-      );
+    let playerId: string;
+
+    if (existingPlayer) {
+      if (existingPlayer.is_active) {
+        throw new Error(
+          `Jersey number #${newPlayer.number} already belongs to an active player.`
+        );
+      }
+
+      const { data: reactivatedPlayer, error: reactivateError } =
+        await supabase!
+          .from("players")
+          .update({
+            player_name: newPlayer.name,
+            primary_position: newPlayer.primaryPosition,
+            age_group: newPlayer.ageGroup,
+            is_active: true,
+          })
+          .eq("id", existingPlayer.id)
+          .select("id")
+          .single();
+
+      if (reactivateError) {
+        throw reactivateError;
+      }
+
+      playerId = String(reactivatedPlayer.id);
+    } else {
+      const { data: createdPlayer, error: playerError } = await supabase!
+        .from("players")
+        .insert({
+          player_name: newPlayer.name,
+          number: newPlayer.number,
+          primary_position: newPlayer.primaryPosition,
+          age_group: newPlayer.ageGroup,
+          is_active: true,
+        })
+        .select("id")
+        .single();
+
+      if (playerError) {
+        throw playerError;
+      }
+
+      if (!createdPlayer?.id) {
+        throw new Error("The new player was created without a player ID.");
+      }
+
+      playerId = String(createdPlayer.id);
+
+      const { error: attendanceError } = await supabase!
+        .from("attendance")
+        .insert({
+          id: playerId,
+          player_name: newPlayer.name,
+          attended: 1,
+          total: DEFAULT_ATTENDANCE_TOTAL,
+        });
+
+      if (attendanceError) {
+        throw attendanceError;
+      }
     }
 
-    assessment.playerId = String(createdPlayer.id);
-
-    const { error: attendanceError } = await supabase!
-      .from("attendance")
-      .insert({
-        id: createdPlayer.id,
-        player_name: newPlayer.name,
-        attended: 1,
-        total: DEFAULT_ATTENDANCE_TOTAL,
-      });
-
-    if (attendanceError) {
-      throw attendanceError;
-    }
+    assessment.playerId = playerId;
+    newPlayer.id = playerId;
   }
 
   const assessmentRow = assessmentToDbRow(assessment);
