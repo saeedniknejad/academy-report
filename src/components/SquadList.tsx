@@ -58,7 +58,7 @@ export default function SquadList({
           const isPrimary = p.meta.name === selectedName;
           const isCompare = compareMode && p.meta.name === compareName;
           return (
-            <div key={p.meta.number} className="w-[150px] shrink-0 md:w-auto md:min-w-0">
+            <div key={p.meta.number} className="w-[190px] shrink-0 md:w-auto md:min-w-0">
               <PlayerCard
                 profile={p}
                 active={isPrimary}
