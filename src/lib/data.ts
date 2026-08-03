@@ -259,6 +259,7 @@ export async function getRoster(): Promise<PlayerMeta[]> {
       const { data, error } = await supabase!
         .from("players")
         .select("*")
+        .eq("is_active", true)
         .order("number", { ascending: true });
       if (error) throw error;
       if (data && data.length) {
@@ -276,6 +277,21 @@ export async function getRoster(): Promise<PlayerMeta[]> {
   }
   // No Supabase, or an empty/failed players table: use the seed roster.
   return ROSTER;
+}
+
+export async function deactivatePlayer(playerId: string): Promise<void> {
+  if (!isSupabaseConfigured()) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  const { error } = await supabase!
+    .from("players")
+    .update({ is_active: false })
+    .eq("id", playerId);
+
+  if (error) {
+    throw error;
+  }
 }
 
 /**

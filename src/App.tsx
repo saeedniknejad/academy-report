@@ -7,6 +7,7 @@ import Login from "./components/Login";
 import { authRequired, supabase } from "./lib/supabase";
 import {
   createGoal,
+  deactivatePlayer,
   getAssessments,
   getAttendance,
   getGoals,
@@ -199,6 +200,18 @@ function toggleGoal(id: string) {
     });
 }
 
+async function handleDeactivatePlayer(playerId: string) {
+  try {
+    await deactivatePlayer(playerId);
+
+    setRoster((previousRoster) =>
+      previousRoster.filter((player) => player.id !== playerId)
+    );
+  } catch (error) {
+    console.error("Failed to deactivate player:", error);
+  }
+}
+
   /**
    * Add a coach-entered assessment. Prepending the row means the derived
    * profiles (radars, trends, flags, timeline) recompute automatically. A
@@ -353,6 +366,7 @@ function toggleGoal(id: string) {
           onPublishNote={publishNote}
           onAddGoal={addGoal}
           onToggleGoal={toggleGoal}
+          onDeactivate={handleDeactivatePlayer}
         />
       )}
 

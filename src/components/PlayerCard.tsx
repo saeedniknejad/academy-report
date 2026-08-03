@@ -7,10 +7,11 @@ interface PlayerCardProps {
   onClick: () => void;
   /** When set, shows a small "compare" toggle affordance. */
   compareActive?: boolean;
+  onDeactivate?: (playerId: string) => void;
 }
 
 /** One squad-list item: jersey number, name, position, trend, flag badge. */
-export default function PlayerCard({ profile, active, onClick, compareActive }: PlayerCardProps) {
+export default function PlayerCard({ profile, active, onClick, compareActive, onDeactivate }: PlayerCardProps) {
   const { meta, trend, flagged } = profile;
   return (
     <button
@@ -38,6 +39,22 @@ export default function PlayerCard({ profile, active, onClick, compareActive }: 
           FLAG
         </span>
       )}
+
+      {onDeactivate && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (confirm(`Remove ${meta.name} from the active squad?`)) {
+              meta.id && onDeactivate(meta.id);
+            }
+          }}
+          className="rounded px-1.5 py-0.5 text-[10px] text-red-400 hover:bg-red-500/10"
+        >
+          Remove
+        </button>
+      )}
+
       <TrendArrow trend={trend} />
     </button>
   );

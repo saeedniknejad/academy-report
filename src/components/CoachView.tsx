@@ -27,6 +27,7 @@ interface CoachViewProps {
   onPublishNote: (playerName: string, note: ExpandedNote) => void;
   onAddGoal: (playerId: string, goalText: string) => Promise<void>;
   onToggleGoal: (id: string) => void;
+  onDeactivate: (playerId: string) => void;
 }
 
 export default function CoachView({
@@ -40,6 +41,7 @@ export default function CoachView({
   onPublishNote,
   onAddGoal,
   onToggleGoal,
+  onDeactivate,
 }: CoachViewProps) {
   const [selectedName, setSelectedName] = useState(profiles[0]?.meta.name ?? "");
   const [compareMode, setCompareMode] = useState(false);
@@ -138,6 +140,7 @@ export default function CoachView({
               setCompareName(null);
             }}
             onSelectCompare={setCompareName}
+            onDeactivate={onDeactivate}
           />
         </div>
 

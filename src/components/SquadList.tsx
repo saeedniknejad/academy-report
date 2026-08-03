@@ -11,6 +11,7 @@ interface SquadListProps {
   compareMode?: boolean;
   onToggleCompareMode?: () => void;
   onSelectCompare?: (name: string) => void;
+  onDeactivate?: (playerId: string) => void;
 }
 
 /**
@@ -25,6 +26,7 @@ export default function SquadList({
   compareMode,
   onToggleCompareMode,
   onSelectCompare,
+  onDeactivate,
 }: SquadListProps) {
   const flaggedCount = profiles.filter((p) => p.flagged).length;
 
@@ -61,6 +63,7 @@ export default function SquadList({
                 profile={p}
                 active={isPrimary}
                 compareActive={Boolean(isCompare)}
+                onDeactivate={onDeactivate}
                 onClick={() => {
                   if (compareMode && !isPrimary && onSelectCompare) onSelectCompare(p.meta.name);
                   else onSelect(p.meta.name);
