@@ -129,6 +129,7 @@ export default function AssessmentForm({ roster, initialAssessment, onSubmit, on
           defaultScores[key] = 3;
         });
 
+        setAssessedBy("Head Coach")
         setPosition((selectedPlayer?.primaryPosition ?? "Midfielder") as Position);
         setScores(defaultScores);
         setHighlight("");
