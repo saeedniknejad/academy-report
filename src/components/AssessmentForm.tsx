@@ -92,6 +92,7 @@ export default function AssessmentForm({ roster, initialAssessment, onSubmit, on
     if (isNewPlayer || !playerSelect || !date) {
       setExistingAssessment(null);
       setCheckingExisting(false);
+      if (isNewPlayer) { setAssessedBy("Head Coach")}
       return;
     }
 
