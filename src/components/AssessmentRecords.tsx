@@ -153,12 +153,24 @@ export default function AssessmentRecords({
                         type="button"
                         disabled={isInactivePlayer}
                         onClick={() => {if (!isInactivePlayer) { onSelect?.(assessment)}}}
-                        className="flex w-full items-center justify-between rounded-md border border-border bg-bg-primary px-4 py-3 text-left transition-colors hover:border-border-hover hover:bg-bg-card-hover"
+                        className={`flex w-full items-center justify-between rounded-md border border-border bg-bg-primary px-4 py-3 text-left transition-colors ${
+                                      isInactivePlayer
+                                        ? "cursor-not-allowed opacity-60"
+                                        : "hover:border-border-hover hover:bg-bg-card-hover"
+                                }`}
                       >
                         <div>
-                          <p className="text-sm font-medium text-text-primary">
-                            {playerName || "Unknown player"}
-                          </p>
+                          <div className="flex items-center gap-2">
+                              <p className="text-sm font-medium text-text-primary">
+                                {playerName}
+                              </p>
+
+                              {isInactivePlayer && (
+                                <span className="rounded bg-bg-card-hover px-1.5 py-0.5 font-mono text-[10px] text-text-muted">
+                                  INACTIVE
+                                </span>
+                              )}
+                          </div>
 
                           <p className="mt-1 font-mono text-[11px] text-text-muted">
                             {new Date(
