@@ -49,7 +49,7 @@ export default function AssessmentForm({ roster, initialAssessment, onSubmit, on
 
   const [date, setDate] = useState(todayISO());
   const [sessionType, setSessionType] = useState<SessionType>("Training");
-  const [assessedBy, setAssessedBy] = useState("Coach Rivera");
+  const [assessedBy, setAssessedBy] = useState("Head Coach");
   const [position, setPosition] = useState<Position>("Midfielder");
 
   const [scores, setScores] = useState<Record<SkillKey, number>>(() => {
