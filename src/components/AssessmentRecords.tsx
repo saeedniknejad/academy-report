@@ -130,11 +130,16 @@ export default function AssessmentRecords({
           ) : (
             <ul className="space-y-2">
               {filteredAssessments.map((assessment, index) => {
-                const playerName =
+                const activePlayerName =
                   assessment.playerId
                     ? playerNameById.get(assessment.playerId)
-                    : assessment.playerName;
+                    : undefined;
 
+                const playerName =
+                  activePlayerName ??
+                  assessment.playerName ??
+                  "Unknown Player";
+                const isInactivePlayer = Boolean(assessment.playerId) && !activePlayerName;
                 const assessmentDate = assessment.date;
 
                 return (
@@ -146,7 +151,8 @@ export default function AssessmentRecords({
                   >
                       <button
                         type="button"
-                        onClick={() => onSelect?.(assessment)}
+                        disabled={isInactivePlayer}
+                        onClick={() => {if (!isInactivePlayer) { onSelect?.(assessment)}}}
                         className="flex w-full items-center justify-between rounded-md border border-border bg-bg-primary px-4 py-3 text-left transition-colors hover:border-border-hover hover:bg-bg-card-hover"
                       >
                         <div>
