@@ -9,7 +9,6 @@
 import {
   MOCK_ASSESSMENTS,
   MOCK_ATTENDANCE,
-  ROSTER,
 } from "./mockData";
 import type {
   Assessment,
@@ -19,11 +18,13 @@ import type {
   Position,
   SessionType,
   SkillKey,
-  Team,
 } from "./types";
 import { SKILL_KEYS } from "./types";
 import { isSupabaseConfigured, supabase } from "./supabase";
 
+export { createTeam, getMyTeams } from "./data/teams";
+export { deactivatePlayer, getRoster } from "./data/players";
+import { getRoster } from "./data/players";
 /** Default number of sessions in a reporting period (for new-player attendance). */
 export const DEFAULT_ATTENDANCE_TOTAL = 16;
 
@@ -191,7 +192,8 @@ export type GetAssessmentsOptions =
  * never receives another child's data, and `internalNotes` is stripped too.
  */
 export async function getAssessments(
-  opts: GetAssessmentsOptions = { audience: "coach" }
+    teamId: string,
+    opts: GetAssessmentsOptions = { audience: "coach" }
 ): Promise<Assessment[]> {
   let rows: Assessment[];
 
@@ -201,6 +203,7 @@ export async function getAssessments(
       const { data, error } = await supabase!
         .from("assessments")
         .select("*")
+        .eq("team_id", teamId)
         .order("date", { ascending: true });
       if (error) throw error;
       rows = (data ?? []).map((r) => dbRowToAssessment(r as Record<string, unknown>));
@@ -254,163 +257,23 @@ export async function getAssessmentByIdentity(
     : null;
 }
 
-export async function getRoster(): Promise<PlayerMeta[]> {
-  if (isSupabaseConfigured()) {
-    try {
-      const { data, error } = await supabase!
-        .from("players")
-        .select("*")
-        .eq("is_active", true)
-        .order("number", { ascending: true });
-      if (error) throw error;
-      if (data && data.length) {
-        return data.map((r) => ({
-          id:String(r.id),
-          name: String(r.player_name),
-          number: Number(r.number),
-          primaryPosition: String(r.primary_position),
-          ageGroup: String(r.age_group ?? "U12"),
-        }));
-      }
-    } catch (err) {
-      console.error("Supabase roster read failed, falling back to mock:", err);
-    }
-  }
-  // No Supabase, or an empty/failed players table: use the seed roster.
-  return ROSTER;
-}
-
-export async function getMyTeams(): Promise<Team[]> {
-  if (!isSupabaseConfigured()) {
-    return [];
-  }
-
-  const {
-    data: userData,
-    error: userError,
-  } = await supabase!.auth.getUser();
-
-  if (userError) {
-    throw userError;
-  }
-
-  const userId = userData.user?.id;
-
-  if (!userId) {
-    throw new Error("No authenticated user was found.");
-  }
-
-  const { data, error } = await supabase!
-    .from("team_members")
-    .select(`
-      role,
-      status,
-      teams (
-        id,
-        name,
-        club_name,
-        age_group,
-        season_start_year,
-        season_end_year,
-        is_active
-      )
-    `)
-    .eq("user_id", userId)
-    .eq("status", "Active");
-
-  if (error) {
-    throw error;
-  }
-
-  return (data ?? [])
-    .flatMap((membership) => membership.teams ?? [])
-    .filter((team) => team.is_active)
-    .map((team) => ({
-      id: String(team.id),
-      name: String(team.name),
-      clubName: String(team.club_name),
-      ageGroup: Number(team.age_group),
-      seasonStartYear: Number(team.season_start_year),
-      seasonEndYear: Number(team.season_end_year),
-      isActive: Boolean(team.is_active),
-    }));
-}
-
-export async function createTeam(input: {
-  name: string;
-  clubName: string;
-  ageGroup: number;
-  seasonStartYear: number;
-  seasonEndYear: number;
-}): Promise<Team> {
-  if (!isSupabaseConfigured()) {
-    throw new Error("Supabase is not configured.");
-  }
-
-  const { data, error } = await supabase!.rpc(
-    "create_team_with_owner",
-    {
-      p_name: input.name.trim(),
-      p_club_name: input.clubName.trim(),
-      p_age_group: input.ageGroup,
-      p_season_start_year: input.seasonStartYear,
-      p_season_end_year: input.seasonEndYear,
-    }
-  );
-
-  if (error) {
-    throw error;
-  }
-
-  const createdTeam = Array.isArray(data) ? data[0] : data;
-
-  if (!createdTeam?.id) {
-    throw new Error("The team was created without an ID.");
-  }
-
-  return {
-    id: String(createdTeam.id),
-    name: String(createdTeam.name),
-    clubName: String(createdTeam.club_name),
-    ageGroup: Number(createdTeam.age_group),
-    seasonStartYear: Number(createdTeam.season_start_year),
-    seasonEndYear: Number(createdTeam.season_end_year),
-    isActive: Boolean(createdTeam.is_active),
-  };
-}
-
-export async function deactivatePlayer(playerId: string): Promise<void> {
-  if (!isSupabaseConfigured()) {
-    throw new Error("Supabase is not configured.");
-  }
-
-  const { error } = await supabase!
-    .from("players")
-    .update({ is_active: false })
-    .eq("id", playerId);
-
-  if (error) {
-    throw error;
-  }
-}
-
 /**
  * Resolve which child a parent is allowed to see. In production this comes from
  * an authenticated session or a signed per-player URL token; here we read a
  * `?child=<slug>` query param and match it against the roster. Returns null if
  * the token is missing or doesn't match a known player.
  */
-export async function resolveParentChild(token?: string): Promise<PlayerMeta | null> {
+export async function resolveParentChild(teamId: string, token?: string): Promise<PlayerMeta | null> {
   if (!token) return null;
-  const roster = await getRoster();
+  const roster = await getRoster(teamId);
   return roster.find((m) => playerSlug(m.name) === token) ?? null;
 }
 
 /** Attendance for a single child (parent) or the whole squad (coach). */
-export async function getAttendance(childName?: string): Promise<AttendanceRecord[]> {
+export async function getAttendance(teamId: string, childName?: string): Promise<AttendanceRecord[]> {
   if (isSupabaseConfigured()) {
     try {
-      const { data, error } = await supabase!.from("attendance").select("*");
+      const { data, error } = await supabase!.from("attendance").select("*").eq("team_id", teamId);
       if (error) throw error;
       let rows: AttendanceRecord[] = (data ?? []).map((r) => ({
         playerName: String(r.player_name),
@@ -428,7 +291,7 @@ export async function getAttendance(childName?: string): Promise<AttendanceRecor
 }
 
 /** Goals for a single player or the whole squad. */
-export async function getGoals(playerId?: string): Promise<Goal[]> {
+export async function getGoals(teamId: string, playerId?: string): Promise<Goal[]> {
   if (!isSupabaseConfigured()) {
     return [];
   }
@@ -438,7 +301,8 @@ export async function getGoals(playerId?: string): Promise<Goal[]> {
       .from("goals")
       .select(
         "id, player_id, text, status, created_at, updated_at, achieved_at"
-      );
+      )
+        .eq("team_id", teamId);
 
     if (playerId) {
       query = query.eq("player_id", playerId);

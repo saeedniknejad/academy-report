@@ -93,21 +93,15 @@ export default function App() {
       setLoading(true);
 
       try {
-        const [t, r, a, att, g] = await Promise.all([
-          getMyTeams(),
-          getRoster(),
-          getAssessments({ audience: "coach" }),
-          getAttendance(),
-          getGoals(),
-        ]);
+        const t = await getMyTeams();
 
         if (cancelled) return;
 
         setTeams(t);
-        setRoster(r);
-        setAssessments(a);
-        setAttendance(att);
-        setGoals(g);
+        setRoster([]);
+        setAssessments([]);
+        setAttendance([]);
+        setGoals([]);
       } catch (error) {
         if (!cancelled) {
           console.error("Failed to load academy data:", error);
@@ -182,8 +176,32 @@ export default function App() {
     const created = await createTeam(input);
 
     setTeams((previousTeams) => [...previousTeams, created]);
-    setSelectedTeam(created);
+    await loadSelectedTeam(created);
   }
+
+async function loadSelectedTeam(team: Team) {
+  setLoading(true);
+
+  try {
+    const [r, a, att, g] = await Promise.all([
+      getRoster(team.id),
+      getAssessments(team.id, { audience: "coach" }),
+      getAttendance(team.id),
+      getGoals(team.id),
+    ]);
+
+    setSelectedTeam(team);
+    setRoster(r);
+    setAssessments(a);
+    setAttendance(att);
+    setGoals(g);
+  } catch (error) {
+    console.error("Failed to load selected team:", error);
+    throw error;
+  } finally {
+    setLoading(false);
+  }
+}
 
 
   async function addGoal(
@@ -386,7 +404,7 @@ async function handleDeactivatePlayer(playerId: string) {
         <MyTeams
           teams={teams}
           onCreateTeam={handleCreateTeam}
-          onSelectTeam={setSelectedTeam}
+          onSelectTeam={loadSelectedTeam}
         />
       ) : (
         <CoachView
