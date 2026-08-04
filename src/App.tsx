@@ -64,6 +64,11 @@ export default function App() {
     });
     const { data } = supabase!.auth.onAuthStateChange((_event, session) => {
       setAuthed(Boolean(session));
+
+      if (!session) {
+        setSelectedTeam(null);
+        setTeams([]);
+      }
     });
     sub = data.subscription;
     return () => sub?.unsubscribe();
