@@ -191,3 +191,13 @@ export interface AiNoteHistoryItem {
   savedAt: string;
   generation?: AiGeneration;
 }
+
+export interface Team {
+  id: string;
+  name: string;
+  clubName: string;
+  ageGroup: number;
+  seasonStartYear: number;
+  seasonEndYear: number;
+  isActive: boolean;
+}

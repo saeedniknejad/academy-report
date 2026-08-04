@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Shield, Loader2, Plus, LogOut } from "lucide-react";
+import MyTeams from "./components/MyTeams";
 import CoachView from "./components/CoachView";
 import AssessmentForm from "./components/AssessmentForm";
 import AssessmentRecords from "./components/AssessmentRecords";
@@ -12,6 +13,8 @@ import {
   getAttendance,
   getGoals,
   getRoster,
+  createTeam,
+  getMyTeams,
   isLiveDataConfigured,
   saveAssessment,
   toggleGoalStatus,
@@ -22,6 +25,7 @@ import type {
   AttendanceRecord,
   ExpandedNote,
   Goal,
+  Team,
   PlayerMeta,
   PlayerProfile,
 } from "./lib/types";
@@ -29,6 +33,9 @@ import { DEFAULT_ATTENDANCE_TOTAL } from "./lib/data";
 
 export default function App() {
   const [loading, setLoading] = useState(true);
+
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
 
   const [roster, setRoster] = useState<PlayerMeta[]>([]);
   const [assessments, setAssessments] = useState<Assessment[]>([]);
@@ -81,7 +88,8 @@ export default function App() {
       setLoading(true);
 
       try {
-        const [r, a, att, g] = await Promise.all([
+        const [t, r, a, att, g] = await Promise.all([
+          getMyTeams(),
           getRoster(),
           getAssessments({ audience: "coach" }),
           getAttendance(),
@@ -90,6 +98,7 @@ export default function App() {
 
         if (cancelled) return;
 
+        setTeams(t);
         setRoster(r);
         setAssessments(a);
         setAttendance(att);
@@ -157,6 +166,20 @@ export default function App() {
   function publishNote(playerName: string, note: ExpandedNote) {
     setPublishedNotes((prev) => ({ ...prev, [playerName]: note }));
   }
+
+  async function handleCreateTeam(input: {
+    name: string;
+    clubName: string;
+    ageGroup: number;
+    seasonStartYear: number;
+    seasonEndYear: number;
+  }) {
+    const created = await createTeam(input);
+
+    setTeams((previousTeams) => [...previousTeams, created]);
+    setSelectedTeam(created);
+  }
+
 
   async function addGoal(
     playerId: string,
@@ -352,8 +375,14 @@ async function handleDeactivatePlayer(playerId: string) {
       {loading ? (
         <div className="flex items-center justify-center gap-2 py-32 text-text-muted">
           <Loader2 className="animate-spin" size={18} />
-          <span className="font-mono text-sm">Loading squad…</span>
+          <span className="font-mono text-sm">Loading…</span>
         </div>
+      ) : !selectedTeam ? (
+        <MyTeams
+          teams={teams}
+          onCreateTeam={handleCreateTeam}
+          onSelectTeam={setSelectedTeam}
+        />
       ) : (
         <CoachView
           profiles={profiles}

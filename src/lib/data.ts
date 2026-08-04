@@ -19,6 +19,7 @@ import type {
   Position,
   SessionType,
   SkillKey,
+  Team,
 } from "./types";
 import { SKILL_KEYS } from "./types";
 import { isSupabaseConfigured, supabase } from "./supabase";
@@ -277,6 +278,144 @@ export async function getRoster(): Promise<PlayerMeta[]> {
   }
   // No Supabase, or an empty/failed players table: use the seed roster.
   return ROSTER;
+}
+
+export async function getMyTeams(): Promise<Team[]> {
+  if (!isSupabaseConfigured()) {
+    return [];
+  }
+
+  const {
+    data: userData,
+    error: userError,
+  } = await supabase!.auth.getUser();
+
+  if (userError) {
+    throw userError;
+  }
+
+  const userId = userData.user?.id;
+
+  if (!userId) {
+    throw new Error("No authenticated user was found.");
+  }
+
+  const { data, error } = await supabase!
+    .from("team_members")
+    .select(`
+      role,
+      status,
+      teams (
+        id,
+        name,
+        club_name,
+        age_group,
+        season_start_year,
+        season_end_year,
+        is_active
+      )
+    `)
+    .eq("user_id", userId)
+    .eq("status", "Active");
+
+  if (error) {
+    throw error;
+  }
+
+  return (data ?? [])
+    .flatMap((membership) => membership.teams ?? [])
+    .filter((team) => team.is_active)
+    .map((team) => ({
+      id: String(team.id),
+      name: String(team.name),
+      clubName: String(team.club_name),
+      ageGroup: Number(team.age_group),
+      seasonStartYear: Number(team.season_start_year),
+      seasonEndYear: Number(team.season_end_year),
+      isActive: Boolean(team.is_active),
+    }));
+}
+
+export async function createTeam(input: {
+  name: string;
+  clubName: string;
+  ageGroup: number;
+  seasonStartYear: number;
+  seasonEndYear: number;
+}): Promise<Team> {
+  if (!isSupabaseConfigured()) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  const { data: userData, error: userError } =
+    await supabase!.auth.getUser();
+
+  if (userError) {
+    throw userError;
+  }
+
+  const userId = userData.user?.id;
+
+  if (!userId) {
+    throw new Error("No authenticated user was found.");
+  }
+
+  const { data: createdTeam, error: teamError } = await supabase!
+    .from("teams")
+    .insert({
+      name: input.name.trim(),
+      club_name: input.clubName.trim(),
+      age_group: input.ageGroup,
+      season_start_year: input.seasonStartYear,
+      season_end_year: input.seasonEndYear,
+      is_active: true,
+    })
+    .select(`
+      id,
+      name,
+      club_name,
+      age_group,
+      season_start_year,
+      season_end_year,
+      is_active
+    `)
+    .single();
+
+  if (teamError) {
+    throw teamError;
+  }
+
+  if (!createdTeam?.id) {
+    throw new Error("The team was created without an ID.");
+  }
+
+  const { error: membershipError } = await supabase!
+    .from("team_members")
+    .insert({
+      team_id: createdTeam.id,
+      user_id: userId,
+      role: "Owner",
+      status: "Active",
+    });
+
+  if (membershipError) {
+    await supabase!
+      .from("teams")
+      .delete()
+      .eq("id", createdTeam.id);
+
+    throw membershipError;
+  }
+
+  return {
+    id: String(createdTeam.id),
+    name: String(createdTeam.name),
+    clubName: String(createdTeam.club_name),
+    ageGroup: Number(createdTeam.age_group),
+    seasonStartYear: Number(createdTeam.season_start_year),
+    seasonEndYear: Number(createdTeam.season_end_year),
+    isActive: Boolean(createdTeam.is_active),
+  };
 }
 
 export async function deactivatePlayer(playerId: string): Promise<void> {
