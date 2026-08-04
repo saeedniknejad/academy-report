@@ -209,7 +209,10 @@ async function loadSelectedTeam(team: Team) {
     goalText: string
   ): Promise<void> {
     try {
-      const savedGoal = await createGoal(playerId, goalText);
+      if (!selectedTeam) {
+        throw new Error("No team is selected.");
+      }
+        const savedGoal = await createGoal(selectedTeam.id, playerId, goalText);
 
       setGoals((previousGoals) => [
         ...previousGoals,

@@ -540,6 +540,7 @@ export async function toggleGoalStatus(
 
 /** Create a new goal for a player. */
 export async function createGoal(
+  teamId: string,
   playerId: string,
   text: string
 ): Promise<Goal> {
@@ -556,6 +557,7 @@ export async function createGoal(
   const { data, error } = await supabase!
     .from("goals")
     .insert({
+      team_id: teamId,
       player_id: playerId,
       text: cleanText,
       status: "in-progress",
@@ -566,11 +568,11 @@ export async function createGoal(
     .single();
 
   if (error) {
-    throw Error;
+    throw error;
   }
 
   if (!data) {
-    throw new Error("The goal was saved but no record was returned");
+    throw new Error("The goal was saved but no record was returned.");
   }
 
   return {
@@ -585,6 +587,6 @@ export async function createGoal(
     updatedAt: String(data.updated_at),
     achievedAt: data.achieved_at
       ? String(data.achieved_at)
-      : undefined
+      : undefined,
   };
 }
