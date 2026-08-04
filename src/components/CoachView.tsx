@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { FileDown, Sparkles, Loader2, Users } from "lucide-react";
+import { FileDown, Sparkles, Loader2, Users, ArrowLeft } from "lucide-react";
 import RadarChart from "./RadarChart";
 import ProgressChart from "./ProgressChart";
 import SquadList from "./SquadList";
@@ -28,6 +28,7 @@ interface CoachViewProps {
   onAddGoal: (playerId: string, goalText: string) => Promise<void>;
   onToggleGoal: (id: string) => void;
   onDeactivate: (playerId: string) => void;
+  onBackToTeams: () => void;
 }
 
 export default function CoachView({
@@ -42,6 +43,7 @@ export default function CoachView({
   onAddGoal,
   onToggleGoal,
   onDeactivate,
+  onBackToTeams,
 }: CoachViewProps) {
   const [selectedName, setSelectedName] = useState(profiles[0]?.meta.name ?? "");
   const [compareMode, setCompareMode] = useState(false);
@@ -85,12 +87,49 @@ export default function CoachView({
     setBatchRunning(false);
   }
 
-  if (!selected) return null;
+  if (!selected) {
+    return (
+      <div className="mx-auto max-w-7xl p-4 sm:p-6">
+        <div className="mb-5">
+          <button
+            type="button"
+            onClick={onBackToTeams}
+            className="flex min-h-[40px] items-center gap-1.5 rounded-md border border-border bg-bg-card px-3 py-2 text-sm text-text-secondary transition-colors hover:border-border-hover hover:text-text-primary"
+          >
+            <ArrowLeft size={14} />
+            My Teams
+          </button>
+        </div>
+
+        <div className="rounded-card border border-dashed border-border bg-bg-card px-6 py-14 text-center">
+          <Users size={32} className="mx-auto text-text-muted" />
+
+          <h2 className="mt-4 font-heading text-xl text-text-primary">
+            No players yet
+          </h2>
+
+          <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-text-muted">
+            Add the first player by creating a new assessment and selecting
+            “Add new player.”
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-7xl p-4 sm:p-6">
       {/* Toolbar: month selector + batch + export */}
       <div className="mb-5 flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          onClick={onBackToTeams}
+          className="flex min-h-[40px] items-center gap-1.5 rounded-md border border-border bg-bg-card px-3 py-2 text-sm text-text-secondary transition-colors hover:border-border-hover hover:text-text-primary"
+        >
+          <ArrowLeft size={14} />
+          My Teams
+        </button>
+
         <label className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-wider text-text-muted">
           Period
           <select

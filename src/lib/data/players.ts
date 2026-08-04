@@ -36,7 +36,7 @@ export async function getRoster(teamId: string): Promise<PlayerMeta[]> {
   return ROSTER;
 }
 
-export async function deactivatePlayer(playerId: string): Promise<void> {
+export async function deactivatePlayer(teamId: string, playerId: string): Promise<void> {
   if (!isSupabaseConfigured()) {
     throw new Error("Supabase is not configured.");
   }
@@ -44,7 +44,8 @@ export async function deactivatePlayer(playerId: string): Promise<void> {
   const { error } = await supabase!
     .from("players")
     .update({ is_active: false })
-    .eq("id", playerId);
+    .eq("id", playerId)
+      .eq("team_id", teamId);
 
   if (error) {
     throw error;

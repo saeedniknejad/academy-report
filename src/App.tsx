@@ -179,6 +179,7 @@ export default function App() {
     await loadSelectedTeam(created);
   }
 
+
 async function loadSelectedTeam(team: Team) {
   setLoading(true);
 
@@ -203,6 +204,18 @@ async function loadSelectedTeam(team: Team) {
   }
 }
 
+
+  function returnToMyTeams() {
+  setSelectedTeam(null);
+  setRoster([]);
+  setAssessments([]);
+  setAttendance([]);
+  setGoals([]);
+  setPublishedNotes({});
+  setFormOpen(false);
+  setRecordsOpen(false);
+  setSelectedAssessment(null);
+}
 
   async function addGoal(
     playerId: string,
@@ -251,7 +264,10 @@ function toggleGoal(id: string) {
 
 async function handleDeactivatePlayer(playerId: string) {
   try {
-    await deactivatePlayer(playerId);
+    if (!selectedTeam) {
+      throw new Error("No team is selected.");
+    }
+    await deactivatePlayer(selectedTeam.id, playerId);
 
     setRoster((previousRoster) =>
       previousRoster.filter((player) => player.id !== playerId)
@@ -425,6 +441,7 @@ async function handleDeactivatePlayer(playerId: string) {
           onAddGoal={addGoal}
           onToggleGoal={toggleGoal}
           onDeactivate={handleDeactivatePlayer}
+          onBackToTeams={returnToMyTeams}
         />
       )}
 
