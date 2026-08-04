@@ -346,6 +346,7 @@ export async function getGoals(teamId: string, playerId?: string): Promise<Goal[
  * player's attendance is incremented by one session.
  */
 export async function saveAssessment(
+  teamId: string,
   assessment: Assessment,
   newPlayer?: PlayerMeta
 ): Promise<void> {
@@ -357,6 +358,7 @@ export async function saveAssessment(
     const { data: existingPlayer, error: lookupError } = await supabase!
       .from("players")
       .select("id, is_active")
+      .eq("team_id", teamId)
       .eq("number", newPlayer.number)
       .maybeSingle();
 
@@ -369,7 +371,7 @@ export async function saveAssessment(
     if (existingPlayer) {
       if (existingPlayer.is_active) {
         throw new Error(
-          `Jersey number #${newPlayer.number} already belongs to an active player.`
+          `Jersey number #${newPlayer.number} already belongs to an active player on this team.`
         );
       }
 
@@ -383,6 +385,7 @@ export async function saveAssessment(
             is_active: true,
           })
           .eq("id", existingPlayer.id)
+          .eq("team_id", teamId)
           .select("id")
           .single();
 
@@ -395,6 +398,7 @@ export async function saveAssessment(
       const { data: createdPlayer, error: playerError } = await supabase!
         .from("players")
         .insert({
+          team_id: teamId,
           player_name: newPlayer.name,
           number: newPlayer.number,
           primary_position: newPlayer.primaryPosition,
@@ -418,6 +422,7 @@ export async function saveAssessment(
         .from("attendance")
         .insert({
           id: playerId,
+          team_id: teamId,
           player_name: newPlayer.name,
           attended: 1,
           total: DEFAULT_ATTENDANCE_TOTAL,
@@ -432,15 +437,14 @@ export async function saveAssessment(
     newPlayer.id = playerId;
   }
 
-  const assessmentRow = assessmentToDbRow(assessment);
+  const assessmentRow = {
+    ...assessmentToDbRow(assessment),
+    team_id: teamId,
+  };
 
   let assessmentError;
 
   if (assessment.id) {
-    console.log("Updating assessment:", {
-      id: assessment.id,
-      row: assessmentRow
-    });
     const result = await supabase!
       .from("assessments")
       .update({
@@ -448,13 +452,9 @@ export async function saveAssessment(
         updated_at: new Date().toISOString(),
       })
       .eq("id", assessment.id)
+      .eq("team_id", teamId)
       .select("id, updated_at")
       .single();
-
-    console.log("Assessment update result:", {
-      data: result.data,
-      error: result.error
-    });
 
     assessmentError = result.error;
   } else {
@@ -469,12 +469,17 @@ export async function saveAssessment(
     throw assessmentError;
   }
 
-  if (!newPlayer && !assessment.id) {
-    const { data } = await supabase!
+  if (!newPlayer && !assessment.id && assessment.playerId) {
+    const { data, error: attendanceLookupError } = await supabase!
       .from("attendance")
       .select("attended,total")
-      .eq("player_name", assessment.playerName)
+      .eq("id", assessment.playerId)
+      .eq("team_id", teamId)
       .maybeSingle();
+
+    if (attendanceLookupError) {
+      throw attendanceLookupError;
+    }
 
     if (data) {
       const attended = Math.min(
@@ -482,13 +487,19 @@ export async function saveAssessment(
         Number(data.total)
       );
 
-      await supabase!
+      const { error: attendanceUpdateError } = await supabase!
         .from("attendance")
         .update({ attended })
-        .eq("player_name", assessment.playerName);
+        .eq("id", assessment.playerId)
+        .eq("team_id", teamId);
+
+      if (attendanceUpdateError) {
+        throw attendanceUpdateError;
+      }
     }
   }
 }
+
 
 /** Flip a goal between in-progress and achieved. No-op in demo mode. */
 export async function toggleGoalStatus(

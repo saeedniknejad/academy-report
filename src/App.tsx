@@ -268,7 +268,10 @@ async function handleDeactivatePlayer(playerId: string) {
     // Persist first when Supabase is configured, so we don't show data that
     // failed to save. In demo mode saveAssessment is a no-op and resolves.
     try {
-      await saveAssessment(assessment, newPlayer);
+      if (!selectedTeam) {
+        throw new Error("No team is selected.");
+      }
+      await saveAssessment(selectedTeam.id, assessment, newPlayer);
     } catch (err) {
       console.error("Failed to save assessment:", err);
       throw err; // surfaced by the form so the coach can retry
