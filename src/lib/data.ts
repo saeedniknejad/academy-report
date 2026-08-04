@@ -347,64 +347,25 @@ export async function createTeam(input: {
     throw new Error("Supabase is not configured.");
   }
 
-  const { data: userData, error: userError } =
-    await supabase!.auth.getUser();
+  const { data, error } = await supabase!.rpc(
+    "create_team_with_owner",
+    {
+      p_name: input.name.trim(),
+      p_club_name: input.clubName.trim(),
+      p_age_group: input.ageGroup,
+      p_season_start_year: input.seasonStartYear,
+      p_season_end_year: input.seasonEndYear,
+    }
+  );
 
-  if (userError) {
-    throw userError;
+  if (error) {
+    throw error;
   }
 
-  const userId = userData.user?.id;
-
-  if (!userId) {
-    throw new Error("No authenticated user was found.");
-  }
-
-  const { data: createdTeam, error: teamError } = await supabase!
-    .from("teams")
-    .insert({
-      name: input.name.trim(),
-      club_name: input.clubName.trim(),
-      age_group: input.ageGroup,
-      season_start_year: input.seasonStartYear,
-      season_end_year: input.seasonEndYear,
-      is_active: true,
-    })
-    .select(`
-      id,
-      name,
-      club_name,
-      age_group,
-      season_start_year,
-      season_end_year,
-      is_active
-    `)
-    .single();
-
-  if (teamError) {
-    throw teamError;
-  }
+  const createdTeam = Array.isArray(data) ? data[0] : data;
 
   if (!createdTeam?.id) {
     throw new Error("The team was created without an ID.");
-  }
-
-  const { error: membershipError } = await supabase!
-    .from("team_members")
-    .insert({
-      team_id: createdTeam.id,
-      user_id: userId,
-      role: "Owner",
-      status: "Active",
-    });
-
-  if (membershipError) {
-    await supabase!
-      .from("teams")
-      .delete()
-      .eq("id", createdTeam.id);
-
-    throw membershipError;
   }
 
   return {
