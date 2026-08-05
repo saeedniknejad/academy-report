@@ -38,9 +38,15 @@ export default function PlayerCard({ profile, active, onClick, compareActive, on
       </div>
 
       <div className="min-w-0 flex-1">
-        {/* Line 1: player name */}
-        <div className="truncate font-heading text-base leading-tight text-text-primary">
-          {meta.name}
+        {/* Line 1: player name + trend */}
+        <div className="flex items-center gap-2">
+          <div className="min-w-0 flex-1 truncate font-heading text-base leading-tight text-text-primary">
+            {meta.name}
+          </div>
+
+          <span className="flex shrink-0 items-center">
+            <TrendArrow trend={trend} />
+          </span>
         </div>
 
         {/* Line 2: position */}
@@ -71,15 +77,12 @@ export default function PlayerCard({ profile, active, onClick, compareActive, on
                   }
                 }
               }}
-              className="rounded px-1.5 py-0.5 text-[10px] text-red-400 hover:bg-red-500/10"
+              className="ml-auto rounded px-1.5 py-0.5 text-[10px] text-red-400 hover:bg-red-500/10"
             >
               Remove
             </button>
           )}
 
-          <span className="ml-auto flex shrink-0 items-center">
-            <TrendArrow trend={trend} />
-          </span>
         </div>
       </div>
     </div>
