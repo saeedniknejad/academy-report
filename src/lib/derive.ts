@@ -56,7 +56,7 @@ function sortByDateAsc(rows: Assessment[]): Assessment[] {
 }
 
 /** Compute a single player's full profile from their assessment rows. */
-export function buildPlayerProfile(meta: PlayerMeta, all: Assessment[]): PlayerProfile {
+export function buildPlayerProfile(meta: PlayerMeta, all: Assessment[], activeMonth: string = "Current"): PlayerProfile {
   const rows = sortByDateAsc(all.filter((r) => r.playerName === meta.name));
 
   // Group rows by month, preserving chronological order.
@@ -68,10 +68,21 @@ export function buildPlayerProfile(meta: PlayerMeta, all: Assessment[]): PlayerP
   });
   const monthKeys = [...byMonth.keys()];
 
-  const currentKey = monthKeys[monthKeys.length - 1];
-  const previousKey = monthKeys[monthKeys.length - 2];
-  const currentRows = currentKey ? byMonth.get(currentKey)! : [];
-  const previousRows = previousKey ? byMonth.get(previousKey)! : [];
+  const latestKey = monthKeys[monthKeys.length - 1];
+
+  const currentKey =
+    activeMonth === "Current"
+      ? latestKey
+      : activeMonth;
+
+  const currentIndex = monthKeys.indexOf(currentKey);
+
+  const previousKey =
+    currentIndex > 0
+      ? monthKeys[currentIndex - 1]
+      : undefined;
+  const currentRows = currentKey ? byMonth.get(currentKey) ?? [] : [];
+  const previousRows = previousKey ? byMonth.get(previousKey) ?? [] : [];
 
   const currentAvgRaw = averageScores(currentRows); // 1–5
   const previousAvgRaw = previousRows.length ? averageScores(previousRows) : currentAvgRaw;
@@ -132,8 +143,9 @@ function mapScale(raw: Record<SkillKey, number>): Record<SkillKey, number> {
 }
 
 /** Build every player's profile. */
-export function buildAllProfiles(roster: PlayerMeta[], all: Assessment[]): PlayerProfile[] {
-  return roster.map((m) => buildPlayerProfile(m, all));
+export function buildAllProfiles(roster: PlayerMeta[], all: Assessment[], activeMonth: string = "Current"
+  ): PlayerProfile[] {
+  return roster.map((m) => buildPlayerProfile(m, all, activeMonth));
 }
 
 /** Team radar = mean of each skill across all players' current-month values. */

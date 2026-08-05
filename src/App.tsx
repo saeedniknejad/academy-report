@@ -152,8 +152,8 @@ export default function App() {
   }, [successMessage]);
 
   const profiles: PlayerProfile[] = useMemo(
-    () => (roster.length ? buildAllProfiles(roster, assessments) : []),
-    [roster, assessments]
+    () => (roster.length ? buildAllProfiles(roster, assessments, activeMonth) : []),
+    [roster, assessments, activeMonth]
   );
 
   const months = useMemo(() => {
