@@ -14,10 +14,18 @@ interface PlayerCardProps {
 export default function PlayerCard({ profile, active, onClick, compareActive, onDeactivate }: PlayerCardProps) {
   const { meta, trend, flagged } = profile;
   return (
-    <button
+    <div
+      role="button"
+      tabIndex={0}
       onClick={onClick}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onClick();
+        }
+      }}
       aria-pressed={active}
-      className={`flex h-[58px] w-full items-center gap-2 rounded-lg border px-2.5 py-1.5 text-left transition-colors ${
+      className={`flex min-h-[78px] w-full cursor-pointer items-center gap-2 rounded-lg border px-2.5 py-2 text-left transition-colors ${
         active
           ? "border-accent-gold bg-bg-card-hover"
           : compareActive
@@ -25,37 +33,55 @@ export default function PlayerCard({ profile, active, onClick, compareActive, on
             : "border-border bg-bg-card hover:border-border-hover"
       }`}
     >
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-bg-primary font-heading text-sm font-semibold text-accent-gold">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-border bg-bg-primary font-heading text-sm font-semibold text-accent-gold">
         {meta.number}
       </div>
+
       <div className="min-w-0 flex-1">
+        {/* Line 1: player name */}
         <div className="truncate font-heading text-base leading-tight text-text-primary">
           {meta.name}
         </div>
-        <div className="font-mono text-[11px] text-text-muted">{meta.primaryPosition}</div>
+
+        {/* Line 2: position */}
+        <div className="mt-0.5 truncate font-mono text-[11px] text-text-muted">
+          {meta.primaryPosition}
+        </div>
+
+        {/* Line 3: flag, remove and trend */}
+        <div className="mt-1 flex min-h-[20px] items-center gap-2">
+          {flagged && (
+            <span className="flex items-center gap-1 rounded bg-accent-red/20 px-1.5 py-0.5 font-mono text-[10px] text-[#E58F86]">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#E58F86]" />
+              Flag
+            </span>
+          )}
+
+          {onDeactivate && (
+            <button
+              type="button"
+              onClick={(event) => {
+                event.stopPropagation();
+
+                if (
+                  confirm(`Remove ${meta.name} from the active squad?`)
+                ) {
+                  if (meta.id) {
+                    onDeactivate(meta.id);
+                  }
+                }
+              }}
+              className="rounded px-1.5 py-0.5 text-[10px] text-red-400 hover:bg-red-500/10"
+            >
+              Remove
+            </button>
+          )}
+
+          <span className="ml-auto flex shrink-0 items-center">
+            <TrendArrow trend={trend} />
+          </span>
+        </div>
       </div>
-      {flagged && (
-        <span className="rounded bg-accent-red/20 px-1.5 py-0.5 font-mono text-[10px] text-[#E58F86]">
-          FLAG
-        </span>
-      )}
-
-      {onDeactivate && (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            if (confirm(`Remove ${meta.name} from the active squad?`)) {
-              meta.id && onDeactivate(meta.id);
-            }
-          }}
-          className="rounded px-1.5 py-0.5 text-[10px] text-red-400 hover:bg-red-500/10"
-        >
-          Remove
-        </button>
-      )}
-
-      <TrendArrow trend={trend} />
-    </button>
+    </div>
   );
 }
