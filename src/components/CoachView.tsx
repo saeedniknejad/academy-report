@@ -29,6 +29,7 @@ interface CoachViewProps {
   onToggleGoal: (id: string) => void;
   onDeactivate: (playerId: string) => void;
   onBackToTeams: () => void;
+  teamTitle: string;
 }
 
 export default function CoachView({
@@ -44,6 +45,7 @@ export default function CoachView({
   onToggleGoal,
   onDeactivate,
   onBackToTeams,
+  teamTitle,
 }: CoachViewProps) {
   const [selectedName, setSelectedName] = useState(profiles[0]?.meta.name ?? "");
   const [compareMode, setCompareMode] = useState(false);
@@ -167,6 +169,7 @@ export default function CoachView({
         <div className="md:col-span-1">
           <SquadList
             profiles={profiles}
+            teamTitle={teamTitle}
             selectedName={selectedName}
             onSelect={(n) => {
               setSelectedName(n);

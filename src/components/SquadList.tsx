@@ -4,6 +4,7 @@ import PlayerCard from "./PlayerCard";
 
 interface SquadListProps {
   profiles: PlayerProfile[];
+  teamTitle: string;
   selectedName: string;
   onSelect: (name: string) => void;
   /** Comparison mode: the second selected player (or null). */
@@ -20,6 +21,7 @@ interface SquadListProps {
  */
 export default function SquadList({
   profiles,
+  teamTitle,
   selectedName,
   onSelect,
   compareName,
@@ -34,7 +36,7 @@ export default function SquadList({
     <div className="flex flex-col gap-2">
       <div className="mb-1 flex items-center justify-between">
         <div className="font-mono text-[11px] uppercase tracking-wider text-text-muted">
-          U11 Squad · {profiles.length} players
+          {teamTitle} · {profiles.length} players
           {flaggedCount > 0 && <span className="text-[#E58F86]"> · {flaggedCount} flagged</span>}
         </div>
         {onToggleCompareMode && (

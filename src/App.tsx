@@ -442,6 +442,7 @@ async function handleDeactivatePlayer(playerId: string) {
           onToggleGoal={toggleGoal}
           onDeactivate={handleDeactivatePlayer}
           onBackToTeams={returnToMyTeams}
+          teamTitle={`${selectedTeam.clubName} ${selectedTeam.name} U${selectedTeam.ageGroup}`}
         />
       )}
 
