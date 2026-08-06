@@ -252,7 +252,6 @@ async function loadSelectedTeam(team: Team) {
   }
 }
 
-
   function returnToMyTeams() {
   setSelectedTeam(null);
   setRoster([]);
@@ -264,6 +263,14 @@ async function loadSelectedTeam(team: Team) {
   setRecordsOpen(false);
   setSelectedAssessment(null);
 }
+
+  function handleAddPlayersFromDashboard() {
+    if (!selectedTeam) {
+      return;
+    }
+
+    setRosterSetupTeam(selectedTeam);
+  }
 
   async function addGoal(
     playerId: string,
@@ -502,6 +509,7 @@ async function handleDeactivatePlayer(playerId: string) {
           onToggleGoal={toggleGoal}
           onDeactivate={handleDeactivatePlayer}
           onBackToTeams={returnToMyTeams}
+          onAddPlayers={handleAddPlayersFromDashboard}
           teamTitle={`${selectedTeam.clubName} ${selectedTeam.name} U${selectedTeam.ageGroup}`}
         />
       )}

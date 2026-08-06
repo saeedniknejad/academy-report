@@ -30,6 +30,7 @@ interface CoachViewProps {
   onDeactivate: (playerId: string) => void;
   onBackToTeams: () => void;
   teamTitle: string;
+  onAddPlayers: () => void;
 }
 
 export default function CoachView({
@@ -45,6 +46,7 @@ export default function CoachView({
   onToggleGoal,
   onDeactivate,
   onBackToTeams,
+  onAddPlayers,
   teamTitle,
 }: CoachViewProps) {
   const [selectedName, setSelectedName] = useState(profiles[0]?.meta.name ?? "");
@@ -111,9 +113,16 @@ export default function CoachView({
           </h2>
 
           <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-text-muted">
-            Add the first player by creating a new assessment and selecting
-            “Add new player.”
+            Add players to start recording assessments and tracking development.
           </p>
+          <button
+            type={"button"}
+            onClick={onAddPlayers}
+            className="mt-5 inline-flex min-h-[44px] items-center justify-center gap-2 rounded-md bg-accent-gold px-5 py-2.5 text-sm font-medium text-bg-primary transition-opacity hover:opacity-90"
+          >
+            <Users size={16} />
+            Add player
+          </button>
         </div>
       </div>
     );
