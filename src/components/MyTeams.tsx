@@ -12,12 +12,14 @@ interface MyTeamsProps {
     seasonEndYear: number;
   }) => Promise<void>;
   onSelectTeam: (team: Team) => void;
+  onDeactivateTeam: (teamId: string) => Promise<void>;
 }
 
 export default function MyTeams({
   teams,
   onCreateTeam,
   onSelectTeam,
+  onDeactivateTeam,
 }: MyTeamsProps) {
   const currentYear = new Date().getFullYear();
 
@@ -177,25 +179,59 @@ export default function MyTeams({
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {teams.map((team) => (
-            <button
+            <div
               key={team.id}
-              type="button"
-              onClick={() => onSelectTeam(team)}
-              className="rounded-card border border-border bg-bg-card p-5 text-left transition-colors hover:border-border-hover hover:bg-bg-card-hover"
+              className="rounded-card border border-border bg-bg-card p-5 transition-colors hover:border-border-hover hover:bg-bg-card-hover"
             >
-              <h2 className="font-heading text-lg text-text-primary">
-                {team.name}
-              </h2>
+              <button
+                type="button"
+                onClick={() => onSelectTeam(team)}
+                className="w-full text-left"
+              >
+                <h2 className="font-heading text-lg text-text-primary">
+                  {team.name}
+                </h2>
 
-              <p className="mt-1 text-sm text-text-secondary">
-                {team.clubName}
-              </p>
+                <p className="mt-1 text-sm text-text-secondary">
+                  {team.clubName}
+                </p>
 
-              <p className="mt-3 font-mono text-[11px] text-text-muted">
-                U-{team.ageGroup} · {team.seasonStartYear}/
-                {String(team.seasonEndYear).slice(-2)}
-              </p>
-            </button>
+                <p className="mt-3 font-mono text-[11px] text-text-muted">
+                  U-{team.ageGroup} · {team.seasonStartYear}/
+                  {String(team.seasonEndYear).slice(-2)}
+                </p>
+              </button>
+
+              <div className="mt-4 flex justify-end border-t border-border pt-3">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const confirmed = window.confirm(
+                      `Remove ${team.clubName} ${team.name} U${team.ageGroup} from My Teams?`
+                    );
+
+                    if (!confirmed) {
+                      return;
+                    }
+
+                    try {
+                      await onDeactivateTeam(team.id);
+                    } catch (error) {
+                      console.error("Failed to deactivate team:", error);
+
+                      window.alert(
+                        error instanceof Error
+                          ? error.message
+                          : "The team could not be removed."
+                      );
+                    }
+                  }}
+                  className="rounded-md px-3 py-1.5 text-xs text-red-400 transition-colors hover:bg-red-500/10"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
           ))}
         </div>
       )}

@@ -12,6 +12,7 @@ import {
   createGoal,
   createRosterPlayers,
   deactivatePlayer,
+  deactivateTeam,
   getAssessments,
   getAttendance,
   getGoals,
@@ -182,6 +183,18 @@ export default function App() {
 
     setTeams((previousTeams) => [...previousTeams, created]);
     setNewlyCreatedTeam(created);
+  }
+
+  async function handleDeactivateTeam(teamId: string) {
+    await deactivateTeam(teamId);
+
+    setTeams((currentTeams) =>
+      currentTeams.filter((team) => team.id !== teamId)
+    );
+
+    if (selectedTeam?.id === teamId) {
+      returnToMyTeams();
+    }
   }
 
 async function handleAddPlayersNow() {
@@ -494,6 +507,7 @@ async function handleDeactivatePlayer(playerId: string) {
           teams={teams}
           onCreateTeam={handleCreateTeam}
           onSelectTeam={loadSelectedTeam}
+          onDeactivateTeam={handleDeactivateTeam}
         />
       ) : (
         <CoachView

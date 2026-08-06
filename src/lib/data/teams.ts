@@ -97,3 +97,20 @@ export async function createTeam(input: {
     isActive: Boolean(createdTeam.is_active),
   };
 }
+
+export async function deactivateTeam(teamId: string): Promise<void> {
+  if (!isSupabaseConfigured()) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  const { error } = await supabase!.rpc(
+    "deactivate_owned_team",
+    {
+      p_team_id: teamId,
+    }
+  );
+
+  if (error) {
+    throw error;
+  }
+}

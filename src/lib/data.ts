@@ -22,7 +22,7 @@ import type {
 import { SKILL_KEYS } from "./types";
 import { isSupabaseConfigured, supabase } from "./supabase";
 
-export { createTeam, getMyTeams } from "./data/teams";
+export { createTeam, deactivateTeam, getMyTeams } from "./data/teams";
 export { createRosterPlayers, deactivatePlayer, getRoster } from "./data/players";
 import { getRoster } from "./data/players";
 /** Default number of sessions in a reporting period (for new-player attendance). */
