@@ -23,7 +23,7 @@ import { SKILL_KEYS } from "./types";
 import { isSupabaseConfigured, supabase } from "./supabase";
 
 export { createTeam, getMyTeams } from "./data/teams";
-export { deactivatePlayer, getRoster } from "./data/players";
+export { createRosterPlayers, deactivatePlayer, getRoster } from "./data/players";
 import { getRoster } from "./data/players";
 /** Default number of sessions in a reporting period (for new-player attendance). */
 export const DEFAULT_ATTENDANCE_TOTAL = 16;

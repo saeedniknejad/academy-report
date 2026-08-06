@@ -36,6 +36,45 @@ export async function getRoster(teamId: string): Promise<PlayerMeta[]> {
   return ROSTER;
 }
 
+export async function createRosterPlayers(
+  teamId: string,
+  players: PlayerMeta[]
+): Promise<PlayerMeta[]> {
+  if (!isSupabaseConfigured()) {
+    throw new Error("Supabase is not configured.");
+  }
+
+  if (players.length === 0) {
+    return [];
+  }
+
+  const rows = players.map((player) => ({
+    team_id: teamId,
+    player_name: player.name.trim(),
+    number: player.number,
+    primary_position: player.primaryPosition,
+    age_group: player.ageGroup,
+    is_active: true,
+  }));
+
+  const { data, error } = await supabase!
+    .from("players")
+    .insert(rows)
+    .select("id, player_name, number, primary_position, age_group");
+
+  if (error) {
+    throw error;
+  }
+
+  return (data ?? []).map((row) => ({
+    id: String(row.id),
+    name: String(row.player_name),
+    number: Number(row.number),
+    primaryPosition: String(row.primary_position),
+    ageGroup: String(row.age_group),
+  }));
+}
+
 export async function deactivatePlayer(teamId: string, playerId: string): Promise<void> {
   if (!isSupabaseConfigured()) {
     throw new Error("Supabase is not configured.");

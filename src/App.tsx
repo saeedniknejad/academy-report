@@ -4,10 +4,13 @@ import MyTeams from "./components/MyTeams";
 import CoachView from "./components/CoachView";
 import AssessmentForm from "./components/AssessmentForm";
 import AssessmentRecords from "./components/AssessmentRecords";
+import TeamCreatedPrompt from "./components/TeamCreatedPrompt";
+import AddRoster from "./components/AddRoster";
 import Login from "./components/Login";
 import { authRequired, supabase } from "./lib/supabase";
 import {
   createGoal,
+  createRosterPlayers,
   deactivatePlayer,
   getAssessments,
   getAttendance,
@@ -36,6 +39,8 @@ export default function App() {
 
   const [teams, setTeams] = useState<Team[]>([]);
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
+  const [newlyCreatedTeam, setNewlyCreatedTeam] = useState<Team | null>(null);
+  const [rosterSetupTeam, setRosterSetupTeam] = useState<Team | null>(null);
 
   const [roster, setRoster] = useState<PlayerMeta[]>([]);
   const [assessments, setAssessments] = useState<Assessment[]>([]);
@@ -176,9 +181,52 @@ export default function App() {
     const created = await createTeam(input);
 
     setTeams((previousTeams) => [...previousTeams, created]);
-    await loadSelectedTeam(created);
+    setNewlyCreatedTeam(created);
   }
 
+async function handleAddPlayersNow() {
+  if (!newlyCreatedTeam) {
+    return;
+  }
+
+  setRosterSetupTeam(newlyCreatedTeam);
+  setNewlyCreatedTeam(null);
+}
+
+async function handleAddPlayersLater() {
+  if (!newlyCreatedTeam) {
+    return;
+  }
+
+  const team = newlyCreatedTeam;
+
+  setNewlyCreatedTeam(null);
+  await loadSelectedTeam(team);
+}
+
+async function handleSaveInitialRoster(players: PlayerMeta[]) {
+  if (!rosterSetupTeam) {
+    throw new Error("No team is selected for roster setup.");
+  }
+
+  const team = rosterSetupTeam;
+
+  await createRosterPlayers(team.id, players);
+
+  setRosterSetupTeam(null);
+  await loadSelectedTeam(team);
+}
+
+async function handleSkipInitialRoster() {
+  if (!rosterSetupTeam) {
+    return;
+  }
+
+  const team = rosterSetupTeam;
+
+  setRosterSetupTeam(null);
+  await loadSelectedTeam(team);
+}
 
 async function loadSelectedTeam(team: Team) {
   setLoading(true);
@@ -422,6 +470,18 @@ async function handleDeactivatePlayer(playerId: string) {
           <Loader2 className="animate-spin" size={18} />
           <span className="font-mono text-sm">Loading…</span>
         </div>
+      ) : rosterSetupTeam ? (
+        <AddRoster
+            team={rosterSetupTeam}
+            onSave={handleSaveInitialRoster}
+            onSkip={handleSkipInitialRoster}
+        />
+      ) : newlyCreatedTeam ? (
+        <TeamCreatedPrompt
+          team={newlyCreatedTeam}
+          onAddPlayersNow={handleAddPlayersNow}
+          onAddPlayersLater={handleAddPlayersLater}
+        />
       ) : !selectedTeam ? (
         <MyTeams
           teams={teams}
